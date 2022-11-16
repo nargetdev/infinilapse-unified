@@ -1,0 +1,718 @@
+#######################
+# Input Schema
+#######################
+
+type StillFrame {
+	id: ID!
+	url: String!
+	bucket: String!
+	date: DateTime!
+	location: String
+	cameraName: String! @search(by: [regexp,exact])
+}
+
+type User @auth(add: {rule:"query($USER: String!) {\n \tqueryUser (filter: { email: { eq: $USER }}) {\n \t\t__typename\n\t}\n}"}, update: {rule:"query($USER: String!) {\n \tqueryUser (filter: { email: { eq: $USER }}) {\n \t\t__typename\n\t}\n}"}, delete: {rule:"query($USER: String!) {\n \tqueryUser (filter: { email: { eq: $USER }}) {\n \t\t__typename\n\t}\n}"}) {
+	username: String! @id
+	name: String!
+	about: String
+	email: String! @id @search(by: [hash])
+	avatarImageURL: String!
+	posts(filter: PostFilter, order: PostOrder, first: Int, offset: Int): [Post!] @hasInverse(field: postedBy)
+	following(filter: UserFilter, order: UserOrder, first: Int, offset: Int): [User] @hasInverse(field: follower)
+	follower(filter: UserFilter, order: UserOrder, first: Int, offset: Int): [User] @hasInverse(field: following)
+	postsAggregate(filter: PostFilter): PostAggregateResult
+	followingAggregate(filter: UserFilter): UserAggregateResult
+	followerAggregate(filter: UserFilter): UserAggregateResult
+}
+
+type Post @auth(update: {rule:"query($USER: String!) {\n \tqueryPost {\n \t\tpostedBy (filter: { email: { eq: $USER }}) {\n   \t\t__typename\n \t\t}\n\t}\n}"}, add: {rule:"query($USER: String!) {\n \tqueryPost {\n \t\tpostedBy (filter: { email: { eq: $USER }}) {\n   \t\t__typename\n \t\t}\n\t}\n}"}, delete: {rule:"query($USER: String!) {\n \tqueryPost {\n \t\tpostedBy (filter: { email: { eq: $USER }}) {\n   \t\t__typename\n \t\t}\n\t}\n}"}) {
+	id: ID!
+	postedBy(filter: UserFilter): User! @hasInverse(field: posts)
+	imageURL: String!
+	description: String
+	likes: Int!
+	comments(filter: CommentFilter, order: CommentOrder, first: Int, offset: Int): [Comment!] @hasInverse(field: commentOn)
+	commentsAggregate(filter: CommentFilter): CommentAggregateResult
+}
+
+type Comment @auth(add: {rule:"query($USER: String!) {\n \tqueryComment {\n \t\tcommentBy(filter: { email: { eq: $USER }}) {\n   \t\t__typename\n \t\t}\n\t}\n}"}, delete: {rule:"query($USER: String!) {\n \tqueryComment {\n \t\tcommentBy(filter: { email: { eq: $USER }}) {\n   \t\t__typename\n \t\t}\n\t}\n}"}, update: {rule:"query($USER: String!) {\n \tqueryComment {\n \t\tcommentBy(filter: { email: { eq: $USER }}) {\n   \t\t__typename\n \t\t}\n\t}\n}"}) {
+	id: ID!
+	text: String!
+	commentBy(filter: UserFilter): User!
+	commentOn(filter: PostFilter): Post! @hasInverse(field: comments)
+}
+
+#######################
+# Extended Definitions
+#######################
+
+"""
+The Int64 scalar type represents a signed 64‐bit numeric non‐fractional value.
+Int64 can represent values in range [-(2^63),(2^63 - 1)].
+"""
+scalar Int64
+
+"""
+The DateTime scalar type represents date and time as a string in RFC3339 format.
+For example: "1985-04-12T23:20:50.52Z" represents 20 minutes and 50.52 seconds after the 23rd hour of April 12th, 1985 in UTC.
+"""
+scalar DateTime
+
+input IntRange{
+	min: Int!
+	max: Int!
+}
+
+input FloatRange{
+	min: Float!
+	max: Float!
+}
+
+input Int64Range{
+	min: Int64!
+	max: Int64!
+}
+
+input DateTimeRange{
+	min: DateTime!
+	max: DateTime!
+}
+
+input StringRange{
+	min: String!
+	max: String!
+}
+
+enum DgraphIndex {
+	int
+	int64
+	float
+	bool
+	hash
+	exact
+	term
+	fulltext
+	trigram
+	regexp
+	year
+	month
+	day
+	hour
+	geo
+}
+
+input AuthRule {
+	and: [AuthRule]
+	or: [AuthRule]
+	not: AuthRule
+	rule: String
+}
+
+enum HTTPMethod {
+	GET
+	POST
+	PUT
+	PATCH
+	DELETE
+}
+
+enum Mode {
+	BATCH
+	SINGLE
+}
+
+input CustomHTTP {
+	url: String!
+	method: HTTPMethod!
+	body: String
+	graphql: String
+	mode: Mode
+	forwardHeaders: [String!]
+	secretHeaders: [String!]
+	introspectionHeaders: [String!]
+	skipIntrospection: Boolean
+}
+
+type Point {
+	longitude: Float!
+	latitude: Float!
+}
+
+input PointRef {
+	longitude: Float!
+	latitude: Float!
+}
+
+input NearFilter {
+	distance: Float!
+	coordinate: PointRef!
+}
+
+input PointGeoFilter {
+	near: NearFilter
+	within: WithinFilter
+}
+
+type PointList {
+	points: [Point!]!
+}
+
+input PointListRef {
+	points: [PointRef!]!
+}
+
+type Polygon {
+	coordinates: [PointList!]!
+}
+
+input PolygonRef {
+	coordinates: [PointListRef!]!
+}
+
+type MultiPolygon {
+	polygons: [Polygon!]!
+}
+
+input MultiPolygonRef {
+	polygons: [PolygonRef!]!
+}
+
+input WithinFilter {
+	polygon: PolygonRef!
+}
+
+input ContainsFilter {
+	point: PointRef
+	polygon: PolygonRef
+}
+
+input IntersectsFilter {
+	polygon: PolygonRef
+	multiPolygon: MultiPolygonRef
+}
+
+input PolygonGeoFilter {
+	near: NearFilter
+	within: WithinFilter
+	contains: ContainsFilter
+	intersects: IntersectsFilter
+}
+
+input GenerateQueryParams {
+	get: Boolean
+	query: Boolean
+	password: Boolean
+	aggregate: Boolean
+}
+
+input GenerateMutationParams {
+	add: Boolean
+	update: Boolean
+	delete: Boolean
+}
+
+directive @hasInverse(field: String!) on FIELD_DEFINITION
+directive @search(by: [DgraphIndex!]) on FIELD_DEFINITION
+directive @dgraph(type: String, pred: String) on OBJECT | INTERFACE | FIELD_DEFINITION
+directive @id on FIELD_DEFINITION
+directive @withSubscription on OBJECT | INTERFACE | FIELD_DEFINITION
+directive @secret(field: String!, pred: String) on OBJECT | INTERFACE
+directive @auth(
+	password: AuthRule
+	query: AuthRule,
+	add: AuthRule,
+	update: AuthRule,
+	delete: AuthRule) on OBJECT | INTERFACE
+directive @custom(http: CustomHTTP, dql: String) on FIELD_DEFINITION
+directive @remote on OBJECT | INTERFACE | UNION | INPUT_OBJECT | ENUM
+directive @remoteResponse(name: String) on FIELD_DEFINITION
+directive @cascade(fields: [String]) on FIELD
+directive @lambda on FIELD_DEFINITION
+directive @lambdaOnMutate(add: Boolean, update: Boolean, delete: Boolean) on OBJECT | INTERFACE
+directive @cacheControl(maxAge: Int!) on QUERY
+directive @generate(
+	query: GenerateQueryParams,
+	mutation: GenerateMutationParams,
+	subscription: Boolean) on OBJECT | INTERFACE
+
+input IntFilter {
+	eq: Int
+	in: [Int]
+	le: Int
+	lt: Int
+	ge: Int
+	gt: Int
+	between: IntRange
+}
+
+input Int64Filter {
+	eq: Int64
+	in: [Int64]
+	le: Int64
+	lt: Int64
+	ge: Int64
+	gt: Int64
+	between: Int64Range
+}
+
+input FloatFilter {
+	eq: Float
+	in: [Float]
+	le: Float
+	lt: Float
+	ge: Float
+	gt: Float
+	between: FloatRange
+}
+
+input DateTimeFilter {
+	eq: DateTime
+	in: [DateTime]
+	le: DateTime
+	lt: DateTime
+	ge: DateTime
+	gt: DateTime
+	between: DateTimeRange
+}
+
+input StringTermFilter {
+	allofterms: String
+	anyofterms: String
+}
+
+input StringRegExpFilter {
+	regexp: String
+}
+
+input StringFullTextFilter {
+	alloftext: String
+	anyoftext: String
+}
+
+input StringExactFilter {
+	eq: String
+	in: [String]
+	le: String
+	lt: String
+	ge: String
+	gt: String
+	between: StringRange
+}
+
+input StringHashFilter {
+	eq: String
+	in: [String]
+}
+
+#######################
+# Generated Types
+#######################
+
+type AddCommentPayload {
+	comment(filter: CommentFilter, order: CommentOrder, first: Int, offset: Int): [Comment]
+	numUids: Int
+}
+
+type AddPostPayload {
+	post(filter: PostFilter, order: PostOrder, first: Int, offset: Int): [Post]
+	numUids: Int
+}
+
+type AddStillFramePayload {
+	stillFrame(filter: StillFrameFilter, order: StillFrameOrder, first: Int, offset: Int): [StillFrame]
+	numUids: Int
+}
+
+type AddUserPayload {
+	user(filter: UserFilter, order: UserOrder, first: Int, offset: Int): [User]
+	numUids: Int
+}
+
+type CommentAggregateResult {
+	count: Int
+	textMin: String
+	textMax: String
+}
+
+type DeleteCommentPayload {
+	comment(filter: CommentFilter, order: CommentOrder, first: Int, offset: Int): [Comment]
+	msg: String
+	numUids: Int
+}
+
+type DeletePostPayload {
+	post(filter: PostFilter, order: PostOrder, first: Int, offset: Int): [Post]
+	msg: String
+	numUids: Int
+}
+
+type DeleteStillFramePayload {
+	stillFrame(filter: StillFrameFilter, order: StillFrameOrder, first: Int, offset: Int): [StillFrame]
+	msg: String
+	numUids: Int
+}
+
+type DeleteUserPayload {
+	user(filter: UserFilter, order: UserOrder, first: Int, offset: Int): [User]
+	msg: String
+	numUids: Int
+}
+
+type PostAggregateResult {
+	count: Int
+	imageURLMin: String
+	imageURLMax: String
+	descriptionMin: String
+	descriptionMax: String
+	likesMin: Int
+	likesMax: Int
+	likesSum: Int
+	likesAvg: Float
+}
+
+type StillFrameAggregateResult {
+	count: Int
+	urlMin: String
+	urlMax: String
+	bucketMin: String
+	bucketMax: String
+	dateMin: DateTime
+	dateMax: DateTime
+	locationMin: String
+	locationMax: String
+	cameraNameMin: String
+	cameraNameMax: String
+}
+
+type UpdateCommentPayload {
+	comment(filter: CommentFilter, order: CommentOrder, first: Int, offset: Int): [Comment]
+	numUids: Int
+}
+
+type UpdatePostPayload {
+	post(filter: PostFilter, order: PostOrder, first: Int, offset: Int): [Post]
+	numUids: Int
+}
+
+type UpdateStillFramePayload {
+	stillFrame(filter: StillFrameFilter, order: StillFrameOrder, first: Int, offset: Int): [StillFrame]
+	numUids: Int
+}
+
+type UpdateUserPayload {
+	user(filter: UserFilter, order: UserOrder, first: Int, offset: Int): [User]
+	numUids: Int
+}
+
+type UserAggregateResult {
+	count: Int
+	usernameMin: String
+	usernameMax: String
+	nameMin: String
+	nameMax: String
+	aboutMin: String
+	aboutMax: String
+	emailMin: String
+	emailMax: String
+	avatarImageURLMin: String
+	avatarImageURLMax: String
+}
+
+#######################
+# Generated Enums
+#######################
+
+enum CommentHasFilter {
+	text
+	commentBy
+	commentOn
+}
+
+enum CommentOrderable {
+	text
+}
+
+enum PostHasFilter {
+	postedBy
+	imageURL
+	description
+	likes
+	comments
+}
+
+enum PostOrderable {
+	imageURL
+	description
+	likes
+}
+
+enum StillFrameHasFilter {
+	url
+	bucket
+	date
+	location
+	cameraName
+}
+
+enum StillFrameOrderable {
+	url
+	bucket
+	date
+	location
+	cameraName
+}
+
+enum UserHasFilter {
+	username
+	name
+	about
+	email
+	avatarImageURL
+	posts
+	following
+	follower
+}
+
+enum UserOrderable {
+	username
+	name
+	about
+	email
+	avatarImageURL
+}
+
+#######################
+# Generated Inputs
+#######################
+
+input AddCommentInput {
+	text: String!
+	commentBy: UserRef!
+	commentOn: PostRef!
+}
+
+input AddPostInput {
+	postedBy: UserRef!
+	imageURL: String!
+	description: String
+	likes: Int!
+	comments: [CommentRef!]
+}
+
+input AddStillFrameInput {
+	url: String!
+	bucket: String!
+	date: DateTime!
+	location: String
+	cameraName: String!
+}
+
+input AddUserInput {
+	username: String!
+	name: String!
+	about: String
+	email: String!
+	avatarImageURL: String!
+	posts: [PostRef!]
+	following: [UserRef]
+	follower: [UserRef]
+}
+
+input CommentFilter {
+	id: [ID!]
+	has: [CommentHasFilter]
+	and: [CommentFilter]
+	or: [CommentFilter]
+	not: CommentFilter
+}
+
+input CommentOrder {
+	asc: CommentOrderable
+	desc: CommentOrderable
+	then: CommentOrder
+}
+
+input CommentPatch {
+	text: String
+	commentBy: UserRef
+	commentOn: PostRef
+}
+
+input CommentRef {
+	id: ID
+	text: String
+	commentBy: UserRef
+	commentOn: PostRef
+}
+
+input PostFilter {
+	id: [ID!]
+	has: [PostHasFilter]
+	and: [PostFilter]
+	or: [PostFilter]
+	not: PostFilter
+}
+
+input PostOrder {
+	asc: PostOrderable
+	desc: PostOrderable
+	then: PostOrder
+}
+
+input PostPatch {
+	postedBy: UserRef
+	imageURL: String
+	description: String
+	likes: Int
+	comments: [CommentRef!]
+}
+
+input PostRef {
+	id: ID
+	postedBy: UserRef
+	imageURL: String
+	description: String
+	likes: Int
+	comments: [CommentRef!]
+}
+
+input StillFrameFilter {
+	id: [ID!]
+	cameraName: StringExactFilter_StringRegExpFilter
+	has: [StillFrameHasFilter]
+	and: [StillFrameFilter]
+	or: [StillFrameFilter]
+	not: StillFrameFilter
+}
+
+input StillFrameOrder {
+	asc: StillFrameOrderable
+	desc: StillFrameOrderable
+	then: StillFrameOrder
+}
+
+input StillFramePatch {
+	url: String
+	bucket: String
+	date: DateTime
+	location: String
+	cameraName: String
+}
+
+input StillFrameRef {
+	id: ID
+	url: String
+	bucket: String
+	date: DateTime
+	location: String
+	cameraName: String
+}
+
+input StringExactFilter_StringRegExpFilter {
+	eq: String
+	in: [String]
+	le: String
+	lt: String
+	ge: String
+	gt: String
+	between: StringRange
+	regexp: String
+}
+
+input UpdateCommentInput {
+	filter: CommentFilter!
+	set: CommentPatch
+	remove: CommentPatch
+}
+
+input UpdatePostInput {
+	filter: PostFilter!
+	set: PostPatch
+	remove: PostPatch
+}
+
+input UpdateStillFrameInput {
+	filter: StillFrameFilter!
+	set: StillFramePatch
+	remove: StillFramePatch
+}
+
+input UpdateUserInput {
+	filter: UserFilter!
+	set: UserPatch
+	remove: UserPatch
+}
+
+input UserFilter {
+	username: StringHashFilter
+	email: StringHashFilter
+	has: [UserHasFilter]
+	and: [UserFilter]
+	or: [UserFilter]
+	not: UserFilter
+}
+
+input UserOrder {
+	asc: UserOrderable
+	desc: UserOrderable
+	then: UserOrder
+}
+
+input UserPatch {
+	name: String
+	about: String
+	avatarImageURL: String
+	posts: [PostRef!]
+	following: [UserRef]
+	follower: [UserRef]
+}
+
+input UserRef {
+	username: String
+	name: String
+	about: String
+	email: String
+	avatarImageURL: String
+	posts: [PostRef!]
+	following: [UserRef]
+	follower: [UserRef]
+}
+
+#######################
+# Generated Query
+#######################
+
+type Query {
+	getStillFrame(id: ID!): StillFrame
+	queryStillFrame(filter: StillFrameFilter, order: StillFrameOrder, first: Int, offset: Int): [StillFrame]
+	aggregateStillFrame(filter: StillFrameFilter): StillFrameAggregateResult
+	getUser(username: String, email: String): User
+	queryUser(filter: UserFilter, order: UserOrder, first: Int, offset: Int): [User]
+	aggregateUser(filter: UserFilter): UserAggregateResult
+	getPost(id: ID!): Post
+	queryPost(filter: PostFilter, order: PostOrder, first: Int, offset: Int): [Post]
+	aggregatePost(filter: PostFilter): PostAggregateResult
+	getComment(id: ID!): Comment
+	queryComment(filter: CommentFilter, order: CommentOrder, first: Int, offset: Int): [Comment]
+	aggregateComment(filter: CommentFilter): CommentAggregateResult
+}
+
+#######################
+# Generated Mutations
+#######################
+
+type Mutation {
+	addStillFrame(input: [AddStillFrameInput!]!): AddStillFramePayload
+	updateStillFrame(input: UpdateStillFrameInput!): UpdateStillFramePayload
+	deleteStillFrame(filter: StillFrameFilter!): DeleteStillFramePayload
+	addUser(input: [AddUserInput!]!, upsert: Boolean): AddUserPayload
+	updateUser(input: UpdateUserInput!): UpdateUserPayload
+	deleteUser(filter: UserFilter!): DeleteUserPayload
+	addPost(input: [AddPostInput!]!): AddPostPayload
+	updatePost(input: UpdatePostInput!): UpdatePostPayload
+	deletePost(filter: PostFilter!): DeletePostPayload
+	addComment(input: [AddCommentInput!]!): AddCommentPayload
+	updateComment(input: UpdateCommentInput!): UpdateCommentPayload
+	deleteComment(filter: CommentFilter!): DeleteCommentPayload
+}
+

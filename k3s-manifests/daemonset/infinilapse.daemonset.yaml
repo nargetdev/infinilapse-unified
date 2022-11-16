@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: infinilapse-daemon
+  labels:
+    k8s-app: infinilapse-daemon-labeled
+spec:
+  selector:
+    matchLabels:
+      name: infinilapse-daemon
+  template:
+    metadata:
+      labels:
+        name: infinilapse-daemon
+    spec:
+      tolerations:
+        # these tolerations are to have the daemonset runnable on control plane nodes
+        # remove them if your control plane nodes should not run pods
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+      nodeSelector:
+        device: camera
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+      containers:
+        - name: dslr-gbucket-dgraph
+          resources:
+            limits:
+              memory: 400Mi
+            requests:
+              cpu: 200m
+              memory: 400Mi
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: binary_path
+              value: "/dslr_capture_loop"
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: TIMELAPSE_INTERVAL_MINS
+              value: "15"
+          #          - name: 	MQTT_BROKER_HOST
+          #            value: "192.168.1.51"
+          #          - name: MQTT_BROKER_PORT
+          #            value: "1884"
+          image: nargetdev/infinilapse:x-0.6.0
+          #        command: [ "/dslr_capture_loop" ]
+          command: ["/main"]
+#          command: [ "sh" ]
+##          args: [ "-c", "echo nameserver 8.8.8.8 >> /etc/resolv.conf && /dslr_capture_loop" ]
+#          args: [ "-c", "/bin/bash" ]
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /data
+              name: photos-volume
+      volumes:
+        - name: photos-volume
+          hostPath:
+            # directory location on host
+            path: /data
+            # this field is optional
+            type: Directory
+      terminationGracePeriodSeconds: 30

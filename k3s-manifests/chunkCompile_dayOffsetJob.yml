@@ -1,0 +1,56 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: chunk-compile-two-days-fixed-path
+spec:
+  template:
+    spec:
+      volumes:
+        - name: photos-volume
+          hostPath:
+            # directory location on host
+            path: /data
+            # this field is optional
+            type: Directory
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: device
+                    operator: In
+                    values:
+                      - camera
+      containers:
+        - name: infinilapse-chunk-compiler
+          env:
+            - name: DATA_BASE_DIR
+              value: ""
+            - name: TZ
+              value: America/Denver
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: DATE_OFFSET_TO_COMPILE
+              value: "-2"
+          image: nargetdev/infinilapse.chunk-compiler:x-0.5.2
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /data
+              name: photos-volume
+      restartPolicy: OnFailure

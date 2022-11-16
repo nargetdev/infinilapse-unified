@@ -1,0 +1,8 @@
+zzz_fsTest
+sandboxfiles
+k3s-manifests
+data
+.gitignore
+Dockerfile
+Dockerfile.buildx.sh
+Dockerfile.nopush.buildx.sh
