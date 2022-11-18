@@ -6,3 +6,4 @@ data
 Dockerfile
 Dockerfile.buildx.sh
 Dockerfile.nopush.buildx.sh
+pkg/compiler/data

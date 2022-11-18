@@ -63,7 +63,7 @@ spec:
           #            value: "192.168.1.51"
           #          - name: MQTT_BROKER_PORT
           #            value: "1884"
-          image: nargetdev/infinilapse:x-0.6.0
+          image: nargetdev/infinilapse:x-0.7.0
           #        command: [ "/dslr_capture_loop" ]
           command: ["/main"]
 #          command: [ "sh" ]

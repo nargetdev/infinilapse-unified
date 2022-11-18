@@ -46,6 +46,7 @@ func main() {
 }
 
 func CaptureWebCams() {
+	webcamMgmt.EnumerateUsbWebCams()
 	webcamMgmt.ExecCamCap02468()
 }
 

@@ -2,8 +2,7 @@
 FROM golang AS build-env
 ENV CGO_ENABLED 0
 
-ARG src_dir=/tl_compiler_src
-ENV binary_path=/main
+ARG src_dir=/goSrcFromHost
 
 COPY . $src_dir
 WORKDIR $src_dir
@@ -13,7 +12,7 @@ WORKDIR $src_dir
 #COPY ./netrc /root/.netrc
 #RUN chmod 600 /root/.netrc
 
-RUN go build -gcflags "all=-N -l" -o $binary_path ./cmd/main/
+RUN go build -gcflags "all=-N -l" -o /webCamEnum $src_dir/pkg/webcamMgmt/cmd
 #RUN go build -gcflags "all=-N -l" -o /reformat_epoch_to_hooman ./cmd/reformat_epoch_time_to_hooman/
 #RUN go build -gcflags "all=-N -l" -o /compilePriorChunks ./cmd/stitchPrior/
 
@@ -21,29 +20,19 @@ RUN go build -gcflags "all=-N -l" -o $binary_path ./cmd/main/
 
 # Final stage
 FROM balenalib/raspberrypi4-64-alpine:latest
-#FROM balenalib/raspberrypi4-64:latest
-
-#COPY --from=build-env /reformat_epoch_to_hooman /
-#COPY --from=build-env /compilePriorChunks /
 
 # for timezone info make sure to set TZ
 RUN apk add --no-cache tzdata
-RUN #apt install tzdata
 
 COPY .config/gcloud/application_default_credentials.json /root/.config/gcloud/application_default_credentials.json
 
 # auth for GCP
 ENV GOOGLE_APPLICATION_CREDENTIALS /root/.config/gcloud/application_default_credentials.json
 RUN apk add ca-certificates
-RUN #apt install ca-certificates
-
-RUN #apt update
-#RUN apt install ffmpeg gphoto2 libgphoto2-6 fswebcam v4l-utils
 
 RUN apk add ffmpeg gphoto2 libgphoto2 v4l-utils
 
-
-COPY --from=build-env /main /
+COPY --from=build-env /webCamEnum /
 
 # Run
-CMD ["/main"]
+CMD ["/webCamEnum"]
