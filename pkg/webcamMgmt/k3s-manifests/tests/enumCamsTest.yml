@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webcam-scan-and-capture
+spec:
+  containers:
+    - name: webcam-scan-and-capture
+      image: nargetdev/infinilapse-webcammgmt-list-devices:0.0.0
+#      securityContext:
+#        privileged: true
+# not allowed??

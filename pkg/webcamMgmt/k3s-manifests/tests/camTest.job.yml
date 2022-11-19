@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: webcammgmt-test-job
+spec:
+  backoffLimit: 4
+  template:
+    spec:
+      nodeName: blackfin
+      restartPolicy: Never
+      containers:
+        - name: webcam-test-pod
+          image: nargetdev/infinilapse-webcammgmt-list-devices:0.0.0
+          securityContext:
+            privileged: true
+          imagePullPolicy: Always
+          volumeMounts:
+              - mountPath: /data
+                name: photos-volume
+      volumes:
+        - name: photos-volume
+          hostPath:
+            # directory location on host
+            path: /data
+            # this field is optional
+            type: Directory
+      terminationGracePeriodSeconds: 30

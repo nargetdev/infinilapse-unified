@@ -48,7 +48,10 @@ func ChunkCompiler() {
 	for _, camDir := range cameraDirList {
 		outMp4Path := compileDayFromDirAndDate(camDir, dateOffsetInt)
 
-		IndexChunk(outMp4Path, lastPartFromPath(camDir), "gcb-site-pub")
+		err := IndexChunk(outMp4Path, lastPartFromPath(camDir), "gcb-site-pub")
+		if err != nil {
+			fmt.Errorf("IndexChunk(...) --- %s\n", err)
+		}
 		//compileDayFromDirAndDate(fmt.Sprintf("%s/%s", "./sandboxfiles/data/img/dslr", cam), cam)
 	}
 

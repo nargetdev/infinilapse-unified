@@ -1,27 +1,18 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: infinilapse-daemon
+  name: infinilapse-daemon-test-enum
   labels:
     k8s-app: infinilapse-daemon-labeled
 spec:
   selector:
     matchLabels:
-      name: infinilapse-daemon
+      name: infinilapse-daemon-test-enum
   template:
     metadata:
       labels:
-        name: infinilapse-daemon
+        name: infinilapse-daemon-test-enum
     spec:
-      tolerations:
-        # these tolerations are to have the daemonset runnable on control plane nodes
-        # remove them if your control plane nodes should not run pods
-        - key: node-role.kubernetes.io/control-plane
-          operator: Exists
-          effect: NoSchedule
-        - key: node-role.kubernetes.io/master
-          operator: Exists
-          effect: NoSchedule
       nodeSelector:
         device: camera
       topologySpreadConstraints:
@@ -29,7 +20,7 @@ spec:
           topologyKey: kubernetes.io/hostname
           whenUnsatisfiable: DoNotSchedule
       containers:
-        - name: dslr-gbucket-dgraph
+        - name: test-enum
           resources:
             limits:
               memory: 400Mi
@@ -59,17 +50,17 @@ spec:
                   fieldPath: status.podIP
             - name: TIMELAPSE_INTERVAL_MINS
               value: "15"
-            - name: COMPILE
-              value: "false"
-            - name: DSLR_CAPTURE
-              value: "false"
-            - name: WEBCAM_CAPTURE
-              value: "true"
           #          - name: 	MQTT_BROKER_HOST
           #            value: "192.168.1.51"
           #          - name: MQTT_BROKER_PORT
           #            value: "1884"
-          image: nargetdev/infinilapse:0.8.1
+          image: nargetdev/infinilapse-webcammgmt-list-devices:0.0.0
+          #        command: [ "/dslr_capture_loop" ]
+#          command: ["/bin/bash"]
+#          command: ["/main"]
+          command: [ "sh" ]
+##          args: [ "-c", "echo nameserver 8.8.8.8 >> /etc/resolv.conf && /dslr_capture_loop" ]
+          args: [ "-c", "sleep 3600" ]
           imagePullPolicy: Always
           securityContext:
             privileged: true

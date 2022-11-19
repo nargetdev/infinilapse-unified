@@ -2,15 +2,80 @@ package webcamMgmt
 
 import (
 	"fmt"
+	"github.com/bitfield/script"
+	"infinilapse-unified/pkg/cloud"
 	"infinilapse-unified/pkg/gcpMgmt"
 	"infinilapse-unified/pkg/gqlMgmt"
+	"infinilapse-unified/pkg/util"
 	"log"
 	"os"
 	"os/exec"
 	"time"
 )
 
-func ExecCamCap02468() {
+func CaptureWebCams() (filePaths []string) {
+	devicesList := EnumerateUsbWebCamDevices()
+	filePaths, synopsis := CaptureFromDevicesList(devicesList)
+	fmt.Printf("webcamMgmt.CaptureFromDevicesList(devicesList)\n%v\n%s\n", filePaths, synopsis)
+	err := cloud.IndexGoogleCloudStorageAndGraphQL(filePaths)
+	if err != nil {
+		fmt.Errorf("%s\n", err)
+	}
+
+	return filePaths
+}
+
+func CaptureFromDevicesList(devices []string) (imgFilePathsList []string, synopsis string) {
+	// Initialize paths, etc.
+	if DebugEnabled {
+		fmt.Printf("func CaptureFromDevicesList(devices []string) (synopsis string) {...}\ndevices: %v\n", devices)
+	}
+	DataDir := os.Getenv("OUTPUT_DIR_WEBCAMS")
+	if DataDir == "" {
+		DataDir = "/data/img/webcams"
+	}
+
+	for _, device := range devices {
+
+		dataStoreDir := fmt.Sprintf("%s/%s", DataDir, util.LastPartFromPath(device))
+		script.Exec("mkdir -p " + dataStoreDir)
+
+		fileName := fmt.Sprintf("%s.jpg", getDateStringNow())
+
+		fullPathResult := fmt.Sprintf("%s/%s", dataStoreDir, fileName)
+
+		fmt.Printf("Capture on device: %s\n", device)
+
+		exposureAbsolute := 1500
+		gain := 0
+		cmdStr := fmt.Sprintf(`
+v4l2-ctl -d %s \
+-c exposure_absolute=%d \
+-c white_balance_temperature_auto=0 \
+-c exposure_auto=1 \
+-c gain=%d \
+--set-fmt-video=width=1920,height=1080 \
+--stream-mmap \
+--stream-count=1 \
+--stream-to=%s
+`, device, exposureAbsolute, gain, fullPathResult)
+
+		outStr, err := script.Exec(cmdStr).String()
+		if err != nil {
+			_ = fmt.Errorf("v4l2 error --- %s\n", err)
+		}
+
+		if DebugEnabled {
+			fmt.Println(outStr)
+		}
+
+		imgFilePathsList = append(imgFilePathsList, fullPathResult)
+	}
+
+	return imgFilePathsList, "cool"
+}
+
+func ExecCamCap02468_fswebcam() {
 	DataDir := os.Getenv("OUTPUT_DIR_WEBCAMS")
 	if DataDir == "" {
 		DataDir = "/data/img/webcams"
@@ -31,8 +96,7 @@ func ExecCamCap02468() {
 
 	shSelectStr := "sh"
 
-	tm := time.Now()
-	dateString := tm.Format(time.RFC3339)
+	dateString := getDateStringNow()
 
 	cameras := [5]int{0, 2, 4, 6, 8}
 
@@ -99,4 +163,10 @@ func ExecCamCap02468() {
 	println("===========================")
 	println("===========================")
 	println("===========================")
+}
+
+func getDateStringNow() string {
+	tm := time.Now()
+	dateString := tm.Format(time.RFC3339)
+	return dateString
 }

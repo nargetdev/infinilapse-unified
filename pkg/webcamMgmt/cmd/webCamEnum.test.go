@@ -1,11 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"infinilapse-unified/pkg/webcamMgmt"
 )
 
 func main() {
-	fmt.Println("ohai")
-	webcamMgmt.EnumerateUsbWebCams()
+	devicesList := webcamMgmt.EnumerateUsbWebCamDevices()
+	webcamMgmt.CaptureFromDevicesList(devicesList)
+
+	// sleep now kill container manually
+	select {}
 }

@@ -12,7 +12,7 @@ func StoreFileToBucket(fullPath, objPath, bucket string) (objUrl string, err err
 	if errr != nil {
 		fmt.Printf("\n\nERROR UPLOADING FILE:")
 		fmt.Println(errr)
-		return "error", err
+		return "error", errr
 	}
 
 	objUrl = "https://storage.googleapis.com/" + bucket + "/" + objPath

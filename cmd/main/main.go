@@ -2,16 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/bitfield/script"
 	"github.com/go-co-op/gocron"
 	"infinilapse-unified/pkg/compiler"
-	"infinilapse-unified/pkg/gcpMgmt"
-	"infinilapse-unified/pkg/gqlMgmt"
-	"infinilapse-unified/pkg/parser"
+	"infinilapse-unified/pkg/dslrMgmt"
 	"infinilapse-unified/pkg/webcamMgmt"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -26,90 +22,39 @@ func main() {
 		println("oh no -- %s", ierr)
 	}
 
-	_, webcamErr := s.Every(intTimelapseIntervalMins).Minutes().Do(CaptureWebCams)
-	if webcamErr != nil {
-		println("webcam issues --- %s", webcamErr)
-	}
+	if os.Getenv("COMPILE") == "false" {
+		println("NOT COMPILING")
+	} else {
+		_, yesterdayCompileErr := s.Every(1).Day().Do(compiler.ChunkCompiler)
+		if yesterdayCompileErr != nil {
+			println("chunky err --- %s", yesterdayCompileErr)
+		}
 
-	_, yesterdayCompileErr := s.Every(intTimelapseIntervalMins).Day().Do(compiler.ChunkCompiler)
-	if yesterdayCompileErr != nil {
-		println("webcam issues --- %s", yesterdayCompileErr)
-	}
-
-	_, compileErr := s.Every(intTimelapseIntervalMins).Day().Do(compiler.CompileAllPreviousVideo)
-	if compileErr != nil {
-		println(".webcam issues --- %s", compileErr)
+		// TODO: roll into prev
+		_, compileErr := s.Every(1).Day().Do(compiler.CompileAllPreviousVideo)
+		if compileErr != nil {
+			println("compile err --- %s", compileErr)
+		}
 	}
 
 	//s.StartAsync()
 	s.StartBlocking()
 }
 
-func CaptureWebCams() {
-	webcamMgmt.EnumerateUsbWebCams()
-	webcamMgmt.ExecCamCap02468()
-}
-
 func CaptureAllCameras() {
-	GcbBucket := "gcb-site-pub"
-	// Get gphoto2 autodetect.  First line of result will be the "----" line.
-	autoDetectMultilineString, _ := script.Exec("gphoto2 --auto-detect").Exec("tail -n +3").String()
-
-	namesAndPortsArray := parser.NamesAndPortsFromMultiLineAutoDetect(autoDetectMultilineString)
-
-	fmt.Println("OUR CAMERAS:")
-	fmt.Printf("%#v\n\n", namesAndPortsArray)
-
-	for _, cam := range namesAndPortsArray {
-		fmt.Printf("\n=====loop(namesAndPortsArray)===\nAbout to execute from array... %#v\n\n", namesAndPortsArray)
-
-		cameraName := strings.Split(cam[0], " ")[2]
-
-		ImgDir := ""
-		ImgDir = ImgDir + "/data/img/dslr/" + cameraName
-
-		datetimeStringWithNewline, err := script.Exec("date +%Y-%m-%dT%H:%M:%S%z").String()
-		datetimeString := strings.TrimSuffix(datetimeStringWithNewline, "\n")
-		if err != nil {
-			fmt.Printf("%s\n", err)
-		}
-
-		fileName := fmt.Sprintf("%s.jpg", datetimeString)
-		FullPath := fmt.Sprintf("%s/%s", ImgDir, fileName)
-		//captureExecString := fmt.Sprintf("gphoto2 --debug --debug-loglevel debug --camera \"%s\" --port \"%s\" --capture-image-and-download --filename \"%%y-%%m-%%d__%%H:%%M:%%S.jpg\"", cam[0], cam[1])
-		captureExecString := fmt.Sprintf("timeout 16 gphoto2 --camera \"%s\" --port \"%s\" --capture-image-and-download --filename \"%s\"", cam[0], cam[1], FullPath)
-		fmt.Printf("EXECUTING> %s\n", captureExecString)
-		bytesWrote, returnCode := script.Exec(captureExecString).Stdout()
-		if returnCode != nil {
-			fmt.Printf("STATUS:: %s\n continuing to next camera...\n", returnCode)
-			continue
-		}
-		fmt.Printf("Wrote %d bytes and received exit status :: %s\n\n", bytesWrote, returnCode)
-
-		err = IndexPhoto(FullPath, cameraName, fileName, GcbBucket)
-		if err != nil {
-			fmt.Printf("IndexPhoto(...)  --- err != nil {\n%s\n}", err)
-		}
+	var capturedFiles []string
+	if os.Getenv("DSLR_CAPTURE") == "false" {
+		println("NOT CAPTURING DSLR")
+	} else {
+		capturedFiles = append(capturedFiles, dslrMgmt.CaptureAllDslr()...)
+	}
+	if os.Getenv("WEBCAM_CAPTURE") == "false" {
+		println("NOT CAPTURING WEBCAM")
+	} else {
+		capturedFiles = append(capturedFiles, webcamMgmt.CaptureWebCams()...)
 	}
 
-	println("finished cap loop")
-}
-
-func IndexPhoto(photoFilePath, cameraName, fileName, bucket string) error {
-	fmt.Printf("Indexing photo to GCP and GQL at path: %s\n", photoFilePath)
-
-	nodeName := os.Getenv("MY_NODE_NAME")
-
-	//bucket := "tl-data"
-	objPath := nodeName + "/" + cameraName + "/" + fileName
-	objUrl, err := gcpMgmt.StoreFileToBucket(photoFilePath, objPath, bucket)
-	if err != nil {
-		fmt.Printf("StoreFileToBucket err --- %s\n", err)
-	}
-	// upload was success index in the graph
-	gqlMgmt.IndexToGraph(objUrl, bucket, nodeName+"."+cameraName)
-
-	return nil
+	fmt.Printf("Finished cap loop.  Got files:\n%v\n", capturedFiles)
 }
 
 func getEnvTimelapseInterval() interface{} {
