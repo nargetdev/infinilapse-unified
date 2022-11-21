@@ -1,9 +1,10 @@
 package compiler
 
 import (
+	"errors"
 	"fmt"
 	"github.com/bitfield/script"
-	"github.com/fatih/color"
+	"infinilapse-unified/pkg/envHelp"
 	"infinilapse-unified/pkg/gcpMgmt"
 	"infinilapse-unified/pkg/gqlMgmt"
 	"io/ioutil"
@@ -12,6 +13,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+)
+
+const (
+	DEBUG = true
 )
 
 func PrintYellow(say string) {
@@ -33,23 +38,79 @@ func PrintCyan(say string) {
 	fmt.Println(cyan)
 }
 
+func outDirFromInDir(inputDir string) string {
+	baseDir := envHelp.BaseDirFromEnv()
+
+	parts := strings.Split(inputDir, "/")
+	outSlug := parts[len(parts)-1]
+	outDir := baseDir + "/data/out/" + outSlug
+
+	return outDir
+}
+
+func ListAvailableDates(camDir string) []string {
+	files, err := ioutil.ReadDir(camDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var miList []string
+	daysMap := make(map[string]bool)
+
+	for _, file := range files {
+		//fmt.Println(file.Name(), file.IsDir())
+		dateStringSlice := strings.Split(file.Name(), ".jpg")
+		dateString := dateStringSlice[0]
+
+		dayStringSlice := strings.Split(dateString, "T")
+
+		var dayString string
+		if len(dayStringSlice) > 1 {
+			dayString = dayStringSlice[0]
+			daysMap[dayString] = true
+		}
+	}
+
+	for key, element := range daysMap {
+		fmt.Println("Key:", key, "=>", "Element:", element)
+		miList = append(miList, key)
+	}
+
+	return miList
+}
+
+func CompileMissing(camDir string, available []string) []string {
+	outDir := outDirFromInDir(camDir)
+
+	var compiledList []string
+
+	for _, date := range available {
+		correspondingOutChunk := outDir + "/" + date + ".mp4"
+		if info, err := os.Stat(correspondingOutChunk); err == nil {
+			// path/to/whatever exists
+			fmt.Printf("%s exists...\n", correspondingOutChunk)
+			fmt.Printf("%d bytes large\n", info.Size())
+
+		} else if errors.Is(err, os.ErrNotExist) {
+			// path/to/whatever does *not* exist
+			fmt.Printf("%s does not exist... we are going to compile it now.\n", correspondingOutChunk)
+			compiledList = append(compiledList, compileDayFromDirAndDate(camDir, date))
+		}
+	}
+
+	return compiledList
+}
+
 func ChunkCompiler() {
-	colored := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 34, "begin ChunkCompiler()")
+	PrintCyanBold("begin ChunkCompiler()")
 
-	PrintYellow("chunkyYellow")
-	PrintCyan("ohai cyan")
-	PrintMagenta("begin ChunkCompiler()")
+	basedir := envHelp.BaseDirFromEnv()
 
-	fmt.Println(colored)
-	//readMiFiles()
-	color.Red("We have red")
-	color.Magenta("And many others ..")
-
-	inputDir := "/data/img/dslr"
+	inputDir := basedir + "/data/img/dslr"
 
 	cameraDirList := listCameras(inputDir)
 
-	anotherDir := "/data/img/webcams"
+	anotherDir := basedir + "/data/img/webcams"
 
 	cameraDirList = append(cameraDirList, listCameras(anotherDir)...)
 
@@ -60,19 +121,6 @@ func ChunkCompiler() {
 	println("===========")
 	println("===========")
 	println("===========")
-	// Use handy standard colors
-	color.Set(color.FgYellow)
-	// Print with default helper functions
-	color.Cyan("Prints text in cyan.")
-
-	// A newline will be appended automatically
-	color.Blue("Prints %s in blue.", "text")
-
-	// These are using the default foreground colors
-	color.Red("We have red")
-	color.Magenta("And many others ..")
-
-	color.Unset()
 
 	DateOffset := os.Getenv("DATE_OFFSET_TO_COMPILE")
 	var dateOffsetInt int
@@ -87,18 +135,21 @@ func ChunkCompiler() {
 	}
 	fmt.Printf("\nCONFIG:\n%s\t%d\n", DateOffset, dateOffsetInt)
 	for _, camDir := range cameraDirList {
-		outMp4Path := compileDayFromDirAndDate(camDir, dateOffsetInt)
+		availableStillsForCompile := ListAvailableDates(camDir)
+		compiledList := CompileMissing(camDir, availableStillsForCompile)
 
-		color.Cyan("Produced path: %s", outMp4Path)
+		//outMp4Path := compileDayFromDirAndDate(camDir, dateFromOffset(dateOffsetInt))
 
-		err := IndexChunk(outMp4Path, lastPartFromPath(camDir), "gcb-site-pub")
-		if err != nil {
-			fmt.Errorf("IndexChunk(...) --- %s\n", err)
+		PrintCyanBold(fmt.Sprintf("Produced paths: %v", compiledList))
+
+		for _, outMp4Path := range compiledList {
+			err := IndexChunk(outMp4Path, lastPartFromPath(camDir), "gcb-site-pub")
+			if err != nil {
+				fmt.Errorf("IndexChunk(...) --- %s\n", err)
+			}
 		}
 		//compileDayFromDirAndDate(fmt.Sprintf("%s/%s", "./sandboxfiles/data/img/dslr", cam), cam)
 	}
-
-	// We've finished our tasks.  This container will now close until the next time the control pane does CronJob.
 
 	// put any outstanding chunks together and update latest.
 	_, err := CompileAllPreviousVideo()
@@ -112,7 +163,7 @@ func IndexChunk(photoFilePath, cameraName, bucket string) error {
 	var fileName string
 	fileName = lastPartFromPath(photoFilePath)
 
-	nodeName := os.Getenv("MY_NODE_NAME")
+	nodeName := sanitizeGetEnvNodeName()
 
 	//bucket := "tl-data"
 	objPath := "tl-chunk" + "/" + nodeName + "/" + cameraName + "/" + fileName
@@ -129,6 +180,15 @@ func IndexChunk(photoFilePath, cameraName, bucket string) error {
 	return nil
 }
 
+func sanitizeGetEnvNodeName() string {
+	nodeName := os.Getenv("MY_NODE_NAME")
+	if nodeName != "" {
+		return nodeName
+	} else {
+		return "macbook"
+	}
+}
+
 func lastPartFromPath(photoFilePath string) string {
 	parts := strings.Split(photoFilePath, "/")
 	return parts[len(parts)-1]
@@ -143,25 +203,17 @@ func yesterdayDateString() string {
 	return dateFromOffset(-1)
 }
 
-func compileDayFromDirAndDate(inputDir string, dateOffset int) (outMp4PathString string) {
-	environment := os.Getenv("ENVIRONMENT")
-	var baseDir string
-	if environment == "dev" {
-		baseDir = "."
-	} else {
-		baseDir = ""
-	}
+func compileDayFromDirAndDate(inputDir string, dayString string) (outMp4PathString string) {
 
-	parts := strings.Split(inputDir, "/")
-	outSlug := parts[len(parts)-1]
-	outDir := baseDir + "/data/out/" + outSlug
+	outDir := outDirFromInDir(inputDir)
+
 	mkdirCmd := "mkdir -p " + outDir
 	_, err := script.Exec(mkdirCmd).Stdout()
 	if err != nil {
 		fmt.Printf("%s\n", err)
 	}
 
-	fileName := dateFromOffset(dateOffset) + ".mp4"
+	fileName := dayString + ".mp4"
 	outMp4PathString = outDir + "/" + fileName
 
 	rmCmd := "rm -f " + outMp4PathString
@@ -173,7 +225,7 @@ func compileDayFromDirAndDate(inputDir string, dateOffset int) (outMp4PathString
 	compileExecString := fmt.Sprintf(
 		"ffmpeg -y -f image2 -r 60 -pattern_type glob -i '%s/%s*.jpg' -vcodec libx264  -pix_fmt yuv420p %s",
 		inputDir,
-		dateFromOffset(dateOffset),
+		dayString,
 		outMp4PathString,
 	)
 
@@ -185,7 +237,11 @@ func compileDayFromDirAndDate(inputDir string, dateOffset int) (outMp4PathString
 	if os.Getenv("DRY_RUN") == "yes" {
 		fmt.Printf("DRY_RUN set not running cmd:\n%s\n", compileExecString)
 	} else {
-		_, returnCode := script.Exec(compileExecString).Stdout()
+		//_, returnCode := script.Exec(compileExecString).Stdout()
+		resultStr, returnCode := script.Exec(compileExecString).String()
+		if DEBUG {
+			fmt.Printf("%s\n", resultStr)
+		}
 		if returnCode != nil {
 			_ = fmt.Errorf("bad return code `ffmpeg` cmd: %s", returnCode)
 		}

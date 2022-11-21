@@ -3,12 +3,20 @@ package envHelp
 import "os"
 
 func BaseDirFromEnv() string {
-	environment := os.Getenv("ENVIRONMENT")
-	var baseDir string
-	if environment == "dev" {
-		baseDir = "."
+	var basedir string
+	if os.Getenv("I_AM_EMBEDDED") == "true" {
+		basedir = ""
 	} else {
-		baseDir = ""
+		basedir = "."
 	}
-	return baseDir
+	return basedir
+	//
+	//environment := os.Getenv("ENVIRONMENT")
+	//var baseDir string
+	//if environment == "dev" {
+	//	baseDir = "."
+	//} else {
+	//	baseDir = ""
+	//}
+	//return baseDir
 }

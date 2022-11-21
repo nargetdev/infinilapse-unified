@@ -85,6 +85,8 @@ func chunksFromPath(chunkDir string) (chunks []string) {
 	for _, file := range files {
 		if file.IsDir() {
 			_ = fmt.Errorf("this should have been an mp4 file")
+		} else if file.Name() == ".DS_Store" {
+			_ = fmt.Errorf("ignore .DS_Store")
 		} else {
 			chunks = append(chunks, chunkDir+"/"+file.Name())
 		}

@@ -127,3 +127,45 @@ func TestPrintMagenta(t *testing.T) {
 		})
 	}
 }
+
+func TestChunkCompiler(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		{
+			name: "floopachunky compiler",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ChunkCompiler()
+		})
+	}
+}
+
+func TestListAvailableDates(t *testing.T) {
+	type args struct {
+		camDir string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "braveList",
+			args: args{
+				camDir: "./data/img/dslr/6D",
+			},
+			want: []string{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ListAvailableDates(tt.args.camDir); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ListAvailableDates() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

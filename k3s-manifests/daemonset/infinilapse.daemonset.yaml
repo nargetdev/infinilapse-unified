@@ -75,6 +75,9 @@ spec:
               value: "12"
             - name: EXPOSURE_8
               value: "60"
+            # For use relative dir when this env is not set.
+            - name: I_AM_EMBEDDED
+              value: "true"
           #          - name: 	MQTT_BROKER_HOST
           #            value: "192.168.1.51"
           #          - name: MQTT_BROKER_PORT
