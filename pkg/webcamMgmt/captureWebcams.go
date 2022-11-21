@@ -50,9 +50,10 @@ func CaptureFromDevicesList(devices []string) (imgFilePathsList []string) {
 
 		fullPathResult := fmt.Sprintf("%s/%s", dataStoreDir, fileName)
 
-		fmt.Printf("Capture on device: %s\n", device)
-
 		exposureAbsolute := expValueByDevice(exposureValues, deviceLastPart)
+
+		fmt.Printf("Capture on device: %s --- at exposure %d\n", device, exposureAbsolute)
+
 		gain := 0
 		cmdStr := fmt.Sprintf(`
 v4l2-ctl -d %s \
@@ -66,13 +67,14 @@ v4l2-ctl -d %s \
 --stream-to=%s
 `, device, exposureAbsolute, gain, fullPathResult)
 
-		outStr, err := script.Exec(cmdStr).String()
-		if err != nil {
-			_ = fmt.Errorf("v4l2 error --- %s\n", err)
-		}
-
-		if DebugEnabled {
-			fmt.Println(outStr)
+		for i := 0; i < 2; i++ {
+			outStr, err := script.Exec(cmdStr).String()
+			if err != nil {
+				_ = fmt.Errorf("v4l2 error --- %s\n", err)
+			}
+			if DebugEnabled {
+				fmt.Println(outStr)
+			}
 		}
 
 		imgFilePathsList = append(imgFilePathsList, fullPathResult)

@@ -62,24 +62,24 @@ spec:
             - name: COMPILE
               value: "false"
             - name: DSLR_CAPTURE
-              value: "false"
+              value: "true"
             - name: WEBCAM_CAPTURE
               value: "true"
             - name: EXPOSURE_0
-              value: "100"
+              value: "140"
             - name: EXPOSURE_2
-              value: "100"
+              value: "200"
             - name: EXPOSURE_4
-              value: "100"
+              value: "40"
             - name: EXPOSURE_6
-              value: "100"
+              value: "12"
             - name: EXPOSURE_8
-              value: "100"
+              value: "60"
           #          - name: 	MQTT_BROKER_HOST
           #            value: "192.168.1.51"
           #          - name: MQTT_BROKER_PORT
           #            value: "1884"
-          image: nargetdev/infinilapse:0.8.1
+          image: nargetdev/infinilapse:0.8.3
           imagePullPolicy: Always
           securityContext:
             privileged: true
