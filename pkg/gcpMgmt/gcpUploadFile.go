@@ -9,9 +9,15 @@ import (
 	"time"
 )
 
+const (
+	DEBUG = false
+)
+
 // UploadFile uploads an object.
 func UploadFile(filePath, object, bucket string) error {
-	fmt.Printf("Uploading filePath.. %s\tto bucket.. %s at obj path... %s\n", filePath, bucket, object)
+	if DEBUG {
+		fmt.Printf("Uploading filePath.. %s\tto bucket.. %s at obj path... %s\n", filePath, bucket, object)
+	}
 
 	//fileName := "getToDaBucket/1666100095.jpg"
 	// bucket := "bucket-name"
@@ -77,7 +83,9 @@ func UploadFile(filePath, object, bucket string) error {
 		return fmt.Errorf("ACLHandle.Set: %v", err)
 	}
 
-	fmt.Printf("Blob %v is now publicly accessible.\n", object)
+	if DEBUG {
+		fmt.Printf("Blob %v is now publicly accessible.\n", object)
+	}
 
 	return nil
 }

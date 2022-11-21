@@ -3,29 +3,32 @@ package webcamMgmt
 import (
 	"fmt"
 	"github.com/bitfield/script"
-	"infinilapse-unified/pkg/cloud"
 	"infinilapse-unified/pkg/gcpMgmt"
 	"infinilapse-unified/pkg/gqlMgmt"
 	"infinilapse-unified/pkg/util"
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 )
 
 func CaptureWebCams() (filePaths []string) {
 	devicesList := EnumerateUsbWebCamDevices()
-	filePaths, synopsis := CaptureFromDevicesList(devicesList)
-	fmt.Printf("webcamMgmt.CaptureFromDevicesList(devicesList)\n%v\n%s\n", filePaths, synopsis)
-	err := cloud.IndexGoogleCloudStorageAndGraphQL(filePaths)
-	if err != nil {
-		fmt.Errorf("%s\n", err)
-	}
+	filePaths = CaptureFromDevicesList(devicesList)
 
 	return filePaths
 }
 
-func CaptureFromDevicesList(devices []string) (imgFilePathsList []string, synopsis string) {
+type exposureMap struct {
+	exp0 int
+	exp2 int
+	exp4 int
+	exp6 int
+	exp8 int
+}
+
+func CaptureFromDevicesList(devices []string) (imgFilePathsList []string) {
 	// Initialize paths, etc.
 	if DebugEnabled {
 		fmt.Printf("func CaptureFromDevicesList(devices []string) (synopsis string) {...}\ndevices: %v\n", devices)
@@ -35,9 +38,12 @@ func CaptureFromDevicesList(devices []string) (imgFilePathsList []string, synops
 		DataDir = "/data/img/webcams"
 	}
 
+	var exposureValues exposureMap = getExposureMapFromEnv()
+
 	for _, device := range devices {
 
-		dataStoreDir := fmt.Sprintf("%s/%s", DataDir, util.LastPartFromPath(device))
+		deviceLastPart := util.LastPartFromPath(device)
+		dataStoreDir := fmt.Sprintf("%s/%s", DataDir, deviceLastPart)
 		script.Exec("mkdir -p " + dataStoreDir)
 
 		fileName := fmt.Sprintf("%s.jpg", getDateStringNow())
@@ -46,7 +52,7 @@ func CaptureFromDevicesList(devices []string) (imgFilePathsList []string, synops
 
 		fmt.Printf("Capture on device: %s\n", device)
 
-		exposureAbsolute := 1500
+		exposureAbsolute := expValueByDevice(exposureValues, deviceLastPart)
 		gain := 0
 		cmdStr := fmt.Sprintf(`
 v4l2-ctl -d %s \
@@ -72,7 +78,42 @@ v4l2-ctl -d %s \
 		imgFilePathsList = append(imgFilePathsList, fullPathResult)
 	}
 
-	return imgFilePathsList, "cool"
+	return imgFilePathsList
+}
+
+func expValueByDevice(values exposureMap, deviceStrShort string) int {
+	switch deviceStrShort {
+	case "video0":
+		return values.exp0
+	case "video2":
+		return values.exp2
+	case "video4":
+		return values.exp4
+	case "video6":
+		return values.exp6
+	case "video8":
+		return values.exp8
+	}
+	_ = fmt.Errorf("Oops. We did not select an exposure. %s\n", deviceStrShort)
+	return 1234 // shouldn't ever happen.
+}
+
+func getExposureMapFromEnv() exposureMap {
+	v0, _ := strconv.Atoi(os.Getenv("EXPOSURE_0"))
+	v2, _ := strconv.Atoi(os.Getenv("EXPOSURE_2"))
+	v4, _ := strconv.Atoi(os.Getenv("EXPOSURE_4"))
+	v6, _ := strconv.Atoi(os.Getenv("EXPOSURE_6"))
+	v8, _ := strconv.Atoi(os.Getenv("EXPOSURE_8"))
+
+	var myExposures = exposureMap{
+		exp0: v0,
+		exp2: v2,
+		exp4: v4,
+		exp6: v6,
+		exp8: v8,
+	}
+
+	return myExposures
 }
 
 func ExecCamCap02468_fswebcam() {

@@ -88,35 +88,6 @@ func TestDevicesStringListFromListDevices(t *testing.T) {
 	}
 }
 
-func TestCaptureFromDevicesList(t *testing.T) {
-	type args struct {
-		devices []string
-	}
-	tests := []struct {
-		name         string
-		args         args
-		wantSynopsis string
-	}{
-		// TODO: Add test cases.
-		{
-			name: "testcap",
-			args: args{
-				devices: []string{
-					"/dev/video0", "/dev/video4", "/dev/video8", "/dev/video2", "/dev/video6",
-				},
-			},
-			wantSynopsis: "cool",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if gotSynopsis := CaptureFromDevicesList(tt.args.devices); gotSynopsis != tt.wantSynopsis {
-				t.Errorf("CaptureFromDevicesList() = %v, want %v", gotSynopsis, tt.wantSynopsis)
-			}
-		})
-	}
-}
-
 func TestDevicesStringListFromListDevices1(t *testing.T) {
 	type args struct {
 		rawString string

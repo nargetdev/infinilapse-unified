@@ -3,13 +3,12 @@ package dslrMgmt
 import (
 	"fmt"
 	"github.com/bitfield/script"
-	"infinilapse-unified/pkg/cloud"
 	"infinilapse-unified/pkg/parser"
 	"strings"
 )
 
 func CaptureAllDslr() (files []string) {
-	GcbBucket := "gcb-site-pub"
+	//GcbBucket := "gcb-site-pub"
 	// Get gphoto2 autodetect.  First line of result will be the "----" line.
 	autoDetectMultilineString, _ := script.Exec("gphoto2 --auto-detect").Exec("tail -n +3").String()
 
@@ -46,10 +45,10 @@ func CaptureAllDslr() (files []string) {
 
 		files = append(files, FullPath)
 
-		err = cloud.IndexPhoto(FullPath, cameraName, fileName, GcbBucket)
-		if err != nil {
-			fmt.Printf("IndexPhoto(...)  --- err != nil {\n%s\n}", err)
-		}
+		//err = cloud.IndexPhoto(FullPath, cameraName, fileName, GcbBucket)
+		//if err != nil {
+		//	fmt.Printf("IndexPhoto(...)  --- err != nil {\n%s\n}", err)
+		//}
 	}
 	return files
 }

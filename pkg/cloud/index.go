@@ -14,7 +14,7 @@ func IndexGoogleCloudStorageAndGraphQL(files []string) error {
 	for _, file := range files {
 
 		//bucket := "tl-data"
-		objPath := nodeName + "/" + file
+		objPath := nodeName + "/" + file[1:]
 
 		objUrl, _ := gcpMgmt.StoreFileToBucket(file, objPath, bucket)
 

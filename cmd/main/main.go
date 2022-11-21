@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/go-co-op/gocron"
+	"infinilapse-unified/pkg/cloud"
 	"infinilapse-unified/pkg/compiler"
 	"infinilapse-unified/pkg/dslrMgmt"
 	"infinilapse-unified/pkg/webcamMgmt"
@@ -54,7 +55,13 @@ func CaptureAllCameras() {
 		capturedFiles = append(capturedFiles, webcamMgmt.CaptureWebCams()...)
 	}
 
-	fmt.Printf("Finished cap loop.  Got files:\n%v\n", capturedFiles)
+	fmt.Printf("webcamMgmt.CaptureFromDevicesList(devicesList)\n%v\n", capturedFiles)
+	err := cloud.IndexGoogleCloudStorageAndGraphQL(capturedFiles)
+	if err != nil {
+		fmt.Errorf("cloud.IndexGoogleCloudStorageAndGraphQL(filePaths) %s\n", err)
+	}
+
+	fmt.Printf("Finished cap loop.\n")
 }
 
 func getEnvTimelapseInterval() interface{} {
