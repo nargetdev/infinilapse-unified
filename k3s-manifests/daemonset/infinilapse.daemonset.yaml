@@ -60,11 +60,11 @@ spec:
             - name: TIMELAPSE_INTERVAL_MINS
               value: "15"
             - name: COMPILE
-              value: "false"
+              value: "true"
             - name: DSLR_CAPTURE
-              value: "true"
+              value: "false"
             - name: WEBCAM_CAPTURE
-              value: "true"
+              value: "false"
             - name: EXPOSURE_0
               value: "140"
             - name: EXPOSURE_2
@@ -79,7 +79,7 @@ spec:
           #            value: "192.168.1.51"
           #          - name: MQTT_BROKER_PORT
           #            value: "1884"
-          image: nargetdev/infinilapse:0.8.3
+          image: nargetdev/infinilapse:0.8.7
           imagePullPolicy: Always
           securityContext:
             privileged: true

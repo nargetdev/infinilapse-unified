@@ -26,15 +26,10 @@ func main() {
 	if os.Getenv("COMPILE") == "false" {
 		println("NOT COMPILING")
 	} else {
+		//_, yesterdayCompileErr := s.Every(1).Day().At("00:01").Do(compiler.ChunkCompiler)
 		_, yesterdayCompileErr := s.Every(1).Day().Do(compiler.ChunkCompiler)
 		if yesterdayCompileErr != nil {
 			println("chunky err --- %s", yesterdayCompileErr)
-		}
-
-		// TODO: roll into prev
-		_, compileErr := s.Every(1).Day().Do(compiler.CompileAllPreviousVideo)
-		if compileErr != nil {
-			println("compile err --- %s", compileErr)
 		}
 	}
 

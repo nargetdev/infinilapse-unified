@@ -3,4 +3,4 @@ docker buildx build \
             . \
             --push \
             --platform linux/arm64 \
-            --tag nargetdev/infinilapse:0.8.3
+            --tag nargetdev/infinilapse:0.8.7

@@ -3,6 +3,7 @@ package compiler
 import (
 	"fmt"
 	"github.com/bitfield/script"
+	"github.com/fatih/color"
 	"infinilapse-unified/pkg/gcpMgmt"
 	"infinilapse-unified/pkg/gqlMgmt"
 	"io/ioutil"
@@ -13,9 +14,36 @@ import (
 	"time"
 )
 
-func ChunkCompiler() {
+func PrintYellow(say string) {
+	yellow := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 33, say)
+	fmt.Println(yellow)
+}
 
+func PrintMagenta(say string) {
+	cyan := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 35, say)
+	fmt.Println(cyan)
+}
+
+func PrintCyanBold(say string) {
+	cyan := fmt.Sprintf("\x1b[1m\x1b[%dm%s\x1b[0m\x1b[22m", 36, say)
+	fmt.Println(cyan)
+}
+func PrintCyan(say string) {
+	cyan := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 36, say)
+	fmt.Println(cyan)
+}
+
+func ChunkCompiler() {
+	colored := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 34, "begin ChunkCompiler()")
+
+	PrintYellow("chunkyYellow")
+	PrintCyan("ohai cyan")
+	PrintMagenta("begin ChunkCompiler()")
+
+	fmt.Println(colored)
 	//readMiFiles()
+	color.Red("We have red")
+	color.Magenta("And many others ..")
 
 	inputDir := "/data/img/dslr"
 
@@ -32,6 +60,19 @@ func ChunkCompiler() {
 	println("===========")
 	println("===========")
 	println("===========")
+	// Use handy standard colors
+	color.Set(color.FgYellow)
+	// Print with default helper functions
+	color.Cyan("Prints text in cyan.")
+
+	// A newline will be appended automatically
+	color.Blue("Prints %s in blue.", "text")
+
+	// These are using the default foreground colors
+	color.Red("We have red")
+	color.Magenta("And many others ..")
+
+	color.Unset()
 
 	DateOffset := os.Getenv("DATE_OFFSET_TO_COMPILE")
 	var dateOffsetInt int
@@ -48,6 +89,8 @@ func ChunkCompiler() {
 	for _, camDir := range cameraDirList {
 		outMp4Path := compileDayFromDirAndDate(camDir, dateOffsetInt)
 
+		color.Cyan("Produced path: %s", outMp4Path)
+
 		err := IndexChunk(outMp4Path, lastPartFromPath(camDir), "gcb-site-pub")
 		if err != nil {
 			fmt.Errorf("IndexChunk(...) --- %s\n", err)
@@ -56,6 +99,13 @@ func ChunkCompiler() {
 	}
 
 	// We've finished our tasks.  This container will now close until the next time the control pane does CronJob.
+
+	// put any outstanding chunks together and update latest.
+	_, err := CompileAllPreviousVideo()
+	if err != nil {
+		_ = fmt.Errorf("error compiling prev: %s\n", err)
+		return
+	}
 }
 
 func IndexChunk(photoFilePath, cameraName, bucket string) error {
@@ -114,14 +164,14 @@ func compileDayFromDirAndDate(inputDir string, dateOffset int) (outMp4PathString
 	fileName := dateFromOffset(dateOffset) + ".mp4"
 	outMp4PathString = outDir + "/" + fileName
 
-	rmCmd := "rm -f" + outMp4PathString
+	rmCmd := "rm -f " + outMp4PathString
 	_, rmErr := script.Exec(rmCmd).Stdout()
 	if rmErr != nil {
 		fmt.Printf("rm -f ... :::ERR::: %s\n", rmErr)
 	}
 
 	compileExecString := fmt.Sprintf(
-		"ffmpeg -f image2 -r 60 -pattern_type glob -i '%s/%s*.jpg' -vcodec libx264  -pix_fmt yuv420p %s",
+		"ffmpeg -y -f image2 -r 60 -pattern_type glob -i '%s/%s*.jpg' -vcodec libx264  -pix_fmt yuv420p %s",
 		inputDir,
 		dateFromOffset(dateOffset),
 		outMp4PathString,

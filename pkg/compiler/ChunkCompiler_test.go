@@ -82,3 +82,48 @@ func TestIndexChunk(t *testing.T) {
 		})
 	}
 }
+
+func TestPrintCyan(t *testing.T) {
+	type args struct {
+		say string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			name: "triCyan", args: args{say: "wutwut inda"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			PrintCyan(tt.args.say)
+			PrintCyanBold(tt.args.say)
+			PrintMagenta("hao")
+		})
+	}
+}
+
+func TestPrintMagenta(t *testing.T) {
+	type args struct {
+		say string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			name: "blah magenta",
+			args: args{
+				say: "ohaie",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			PrintMagenta(tt.args.say)
+		})
+	}
+}
