@@ -3,7 +3,9 @@ sandboxfiles
 k3s-manifests
 data
 .gitignore
+.dockerignore
 Dockerfile
-Dockerfile.buildx.sh
-Dockerfile.nopush.buildx.sh
+# Dockerfile.buildx.sh
+# Dockerfile.nopush.buildx.sh
+Dockerfile.*.sh
 pkg/compiler/data

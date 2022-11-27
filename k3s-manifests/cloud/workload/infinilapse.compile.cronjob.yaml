@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infinicomp
+  labels:
+    k8s-app: infinicomp
+spec:
+  selector:
+    matchLabels:
+      name: infinicomp
+  template:
+    metadata:
+      labels:
+        name: infinicomp
+    spec:
+#      nodeSelector:
+#        affinities: pensieve # memory capable
+      containers:
+        - name: infinilapse
+#          resources:
+#            limits:
+#              cpu: 900m
+#              memory: 1500Mi
+#            requests:
+#              cpu: 1000m
+#              memory: 1500Mi
+          env:
+            - name: TZ
+              value: America/Denver
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: TIMELAPSE_INTERVAL_MINS
+              value: "15"
+            - name: COMPILE
+              value: "true"
+            - name: DSLR_CAPTURE
+              value: "false"
+            - name: WEBCAM_CAPTURE
+              value: "false"
+            - name: COMPILE_NOW
+              value: "false"
+            # REQUIRED - So I can test some of this stuff locally.
+            - name: I_AM_EMBEDDED
+              value: "true"
+
+#          image: nargetdev/infinilapse:1.0.0
+          image: nargetdev/infinilapse:d-1.0.0
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /data
+              name: photos-volume
+      volumes:
+        - name: photos-volume
+          persistentVolumeClaim:
+            claimName: nonvolatile-photos-volume
+      terminationGracePeriodSeconds: 30
