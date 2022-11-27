@@ -2,10 +2,13 @@ zzz_fsTest
 sandboxfiles
 k3s-manifests
 data
+.git
 .gitignore
 .dockerignore
-Dockerfile
+# Dockerfile
 # Dockerfile.buildx.sh
 # Dockerfile.nopush.buildx.sh
-Dockerfile.*.sh
+Dockerfile*
 pkg/compiler/data
+.DS_Store
+.idea

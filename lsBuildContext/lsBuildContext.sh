@@ -1,0 +1,1 @@
+docker build .. -f Dockerfile.lsBuildContext -t ls-build-context && docker run --rm -it ls-build-context find /tmp/build
