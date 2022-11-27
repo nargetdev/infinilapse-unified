@@ -2,6 +2,7 @@ package gcpMgmt
 
 import (
 	"fmt"
+	"infinilapse-unified/pkg/color"
 )
 
 func StoreFileToBucket(fullPath, objPath, bucket string) (objUrl string, err error) {
@@ -16,7 +17,7 @@ func StoreFileToBucket(fullPath, objPath, bucket string) (objUrl string, err err
 	}
 
 	objUrl = "https://storage.googleapis.com/" + bucket + "/" + objPath
-	println("\n\nOBJECT URL:\n\n" + objUrl)
+	color.PrintCyanBold("\n\nOBJECT URL:\n\n" + objUrl)
 
 	return objUrl, nil
 }

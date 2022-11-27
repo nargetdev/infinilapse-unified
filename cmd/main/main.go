@@ -26,8 +26,12 @@ func main() {
 	if os.Getenv("COMPILE") == "false" {
 		println("NOT COMPILING")
 	} else {
-		//_, yesterdayCompileErr := s.Every(1).Day().At("00:01").Do(compiler.ChunkCompiler)
-		_, yesterdayCompileErr := s.Every(1).Day().Do(compiler.ChunkCompiler)
+		var yesterdayCompileErr error
+		if os.Getenv("COMPILE_NOW") == "true" {
+			_, yesterdayCompileErr = s.Every(1).Day().Do(compiler.ChunkCompiler)
+		} else {
+			_, yesterdayCompileErr = s.Every(1).Day().At("00:01").Do(compiler.ChunkCompiler)
+		}
 		if yesterdayCompileErr != nil {
 			println("chunky err --- %s", yesterdayCompileErr)
 		}
@@ -35,6 +39,7 @@ func main() {
 
 	//s.StartAsync()
 	s.StartBlocking()
+
 }
 
 func CaptureAllCameras() {

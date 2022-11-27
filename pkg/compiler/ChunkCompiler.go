@@ -4,39 +4,20 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bitfield/script"
+	"infinilapse-unified/pkg/color"
 	"infinilapse-unified/pkg/envHelp"
 	"infinilapse-unified/pkg/gcpMgmt"
 	"infinilapse-unified/pkg/gqlMgmt"
 	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
 
 const (
-	DEBUG = true
+	DEBUG = false
 )
-
-func PrintYellow(say string) {
-	yellow := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 33, say)
-	fmt.Println(yellow)
-}
-
-func PrintMagenta(say string) {
-	cyan := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 35, say)
-	fmt.Println(cyan)
-}
-
-func PrintCyanBold(say string) {
-	cyan := fmt.Sprintf("\x1b[1m\x1b[%dm%s\x1b[0m\x1b[22m", 36, say)
-	fmt.Println(cyan)
-}
-func PrintCyan(say string) {
-	cyan := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 36, say)
-	fmt.Println(cyan)
-}
 
 func outDirFromInDir(inputDir string) string {
 	baseDir := envHelp.BaseDirFromEnv()
@@ -102,7 +83,7 @@ func CompileMissing(camDir string, available []string) []string {
 }
 
 func ChunkCompiler() {
-	PrintCyanBold("begin ChunkCompiler()")
+	color.PrintCyanBold("begin ChunkCompiler()")
 
 	basedir := envHelp.BaseDirFromEnv()
 
@@ -114,33 +95,17 @@ func ChunkCompiler() {
 
 	cameraDirList = append(cameraDirList, listCameras(anotherDir)...)
 
-	println("WELCOME TO THE DAILY FFMPEG COMPILER\n")
+	println("===  WELCOME TO THE DAILY FFMPEG COMPILER  ===\n")
 
 	fmt.Printf("%v\n", cameraDirList)
 
-	println("===========")
-	println("===========")
-	println("===========")
-
-	DateOffset := os.Getenv("DATE_OFFSET_TO_COMPILE")
-	var dateOffsetInt int
-	var strconvErr error
-	if DateOffset == "" {
-		dateOffsetInt = -1
-	} else {
-		dateOffsetInt, strconvErr = strconv.Atoi(DateOffset)
-		if strconvErr != nil {
-			fmt.Printf("DATE_OFFSET_TO_COMPILE not converted to int --- %s\n", strconvErr)
-		}
-	}
-	fmt.Printf("\nCONFIG:\n%s\t%d\n", DateOffset, dateOffsetInt)
 	for _, camDir := range cameraDirList {
 		availableStillsForCompile := ListAvailableDates(camDir)
 		compiledList := CompileMissing(camDir, availableStillsForCompile)
 
 		//outMp4Path := compileDayFromDirAndDate(camDir, dateFromOffset(dateOffsetInt))
 
-		PrintCyanBold(fmt.Sprintf("Produced paths: %v", compiledList))
+		color.PrintCyanBold(fmt.Sprintf("Produced paths: %v", compiledList))
 
 		for _, outMp4Path := range compiledList {
 			err := IndexChunk(outMp4Path, lastPartFromPath(camDir), "gcb-site-pub")

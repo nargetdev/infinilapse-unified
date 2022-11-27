@@ -30,12 +30,12 @@ spec:
           whenUnsatisfiable: DoNotSchedule
       containers:
         - name: dslr-gbucket-dgraph
-          resources:
-            limits:
-              memory: 400Mi
-            requests:
-              cpu: 200m
-              memory: 400Mi
+#          resources:
+#            limits:
+#              memory: 1Gi
+#            requests:
+#              cpu: 400m
+#              memory: 1Gi
           env:
             - name: TZ
               value: America/Denver
@@ -62,8 +62,10 @@ spec:
             - name: COMPILE
               value: "true"
             - name: DSLR_CAPTURE
-              value: "false"
+              value: "true"
             - name: WEBCAM_CAPTURE
+              value: "true"
+            - name: COMPILE_NOW
               value: "false"
             - name: EXPOSURE_0
               value: "140"
@@ -75,14 +77,14 @@ spec:
               value: "12"
             - name: EXPOSURE_8
               value: "60"
-            # For use relative dir when this env is not set.
+            # REQUIRED - So I can test some of this stuff locally.
             - name: I_AM_EMBEDDED
               value: "true"
           #          - name: 	MQTT_BROKER_HOST
           #            value: "192.168.1.51"
           #          - name: MQTT_BROKER_PORT
           #            value: "1884"
-          image: nargetdev/infinilapse:0.8.7
+          image: nargetdev/infinilapse:0.9.4
           imagePullPolicy: Always
           securityContext:
             privileged: true
