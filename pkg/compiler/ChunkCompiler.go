@@ -173,19 +173,15 @@ func compileDayFromDirAndDate(inputDir string, dayString string) (outMp4PathStri
 	outDir := outDirFromInDir(inputDir)
 
 	mkdirCmd := "mkdir -p " + outDir
-	_, err := script.Exec(mkdirCmd).Stdout()
-	if err != nil {
-		fmt.Printf("%s\n", err)
-	}
+
+	execStdoutWrapper(mkdirCmd)
 
 	fileName := dayString + ".mp4"
 	outMp4PathString = outDir + "/" + fileName
 
 	rmCmd := "rm -f " + outMp4PathString
-	_, rmErr := script.Exec(rmCmd).Stdout()
-	if rmErr != nil {
-		fmt.Printf("rm -f ... :::ERR::: %s\n", rmErr)
-	}
+
+	execStdoutWrapper(rmCmd)
 
 	compileExecString := fmt.Sprintf(
 		"ffmpeg -y -f image2 -r 60 -pattern_type glob -i '%s/%s*.jpg' -vcodec libx264  -pix_fmt yuv420p %s",
@@ -194,16 +190,19 @@ func compileDayFromDirAndDate(inputDir string, dayString string) (outMp4PathStri
 		outMp4PathString,
 	)
 
-	//bytesOfStdout, returnCode := script.Exec(compileExecString).Stdout()
+	execStringWrapper(compileExecString)
 
-	fmt.Println("our command:")
-	fmt.Println(compileExecString)
+	return outMp4PathString
+}
 
-	if os.Getenv("DRY_RUN") == "yes" {
-		fmt.Printf("DRY_RUN set not running cmd:\n%s\n", compileExecString)
+func execStringWrapper(cmd string) {
+	color.PrintCyanBold(cmd)
+
+	if os.Getenv("DRY_RUN") == "TRUE" {
+		fmt.Printf("DRY_RUN set not running cmd:\n%s\n", cmd)
 	} else {
 		//_, returnCode := script.Exec(compileExecString).Stdout()
-		resultStr, returnCode := script.Exec(compileExecString).String()
+		resultStr, returnCode := script.Exec(cmd).String()
 		if DEBUG {
 			fmt.Printf("%s\n", resultStr)
 		}
@@ -211,8 +210,18 @@ func compileDayFromDirAndDate(inputDir string, dayString string) (outMp4PathStri
 			_ = fmt.Errorf("bad return code `ffmpeg` cmd: %s", returnCode)
 		}
 	}
+}
 
-	return outMp4PathString
+func execStdoutWrapper(cmd string) {
+	color.PrintCyanBold(cmd)
+	if os.Getenv("DRY_RUN") == "TRUE" {
+		fmt.Printf("DRY_RUN==TRUE .. not running\n")
+	} else {
+		_, err := script.Exec(cmd).Stdout()
+		if err != nil {
+			fmt.Printf("%s\n", err)
+		}
+	}
 }
 
 func readMiFiles() {

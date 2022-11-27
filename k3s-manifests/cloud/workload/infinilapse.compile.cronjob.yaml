@@ -54,10 +54,13 @@ spec:
               value: "false"
             - name: COMPILE_NOW
               value: "false"
+            # by conventions my macros must match literally "TRUE".  anything else ("True", "true", "1") is not a match.
+            - name: DRY_RUN
+              value: "TRUE"
             # REQUIRED - So I can test some of this stuff locally.
             - name: I_AM_EMBEDDED
               value: "true"
-          image: nargetdev/infinilapse:1.0.2
+          image: nargetdev/infinilapse:1.0.3
           imagePullPolicy: Always
           securityContext:
             privileged: true

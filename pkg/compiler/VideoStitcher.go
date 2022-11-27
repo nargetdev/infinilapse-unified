@@ -38,13 +38,16 @@ func CompileAllPreviousVideo() (string, error) {
 		}
 
 		var stitcherCmd string = fmt.Sprintf("ffmpeg -y -f concat -safe 0 -i "+chunksSliceTxtPath+" -c copy %s", outMp4Path)
+
+		execStringWrapper(stitcherCmd)
+
 		//var stitcherCmd string = fmt.Sprintf("ffmpeg -f concat -safe 0 "+inputChunksOpts+" -c copy %s", outMp4Path)
-		stitchStdout, stitchErr := script.Exec(stitcherCmd).String()
-		if DEBUG {
-			println(stitcherCmd)
-			fmt.Printf("%s\n", stitchStdout)
-		}
-		check(stitchErr, "stitchErr")
+		//stitchStdout, stitchErr := script.Exec(stitcherCmd).String()
+		//if DEBUG {
+		//	println(stitcherCmd)
+		//	fmt.Printf("%s\n", stitchStdout)
+		//}
+		//check(stitchErr, "stitchErr")
 
 	}
 
