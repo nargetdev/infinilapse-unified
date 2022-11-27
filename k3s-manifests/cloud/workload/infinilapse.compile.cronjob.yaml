@@ -14,6 +14,9 @@ spec:
         name: infinicomp
     spec:
 #      nodeSelector:
+#        cloud.google.com/compute-class: Scale-Out
+#        kubernetes.io/arch: arm64
+#      nodeSelector:
 #        kubernetes.io/arch: amd64
 #        affinities: pensieve # memory capable
       containers:

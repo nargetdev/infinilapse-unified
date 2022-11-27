@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: floopa
+  labels:
+    k8s-app: floopa
+spec:
+  selector:
+    matchLabels:
+      name: floopa
+  template:
+    metadata:
+      labels:
+        name: floopa
+    spec:
+      containers:
+        - name: busyvolume
+          image: nargetdev/sleep7200
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /data
+              name: photos-volume
+      volumes:
+        - name: photos-volume
+          persistentVolumeClaim:
+            claimName: nonvolatile-photos-volume
+      terminationGracePeriodSeconds: 30

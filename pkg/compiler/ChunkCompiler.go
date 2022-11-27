@@ -107,12 +107,19 @@ func ChunkCompiler() {
 
 		color.PrintCyanBold(fmt.Sprintf("Produced paths: %v", compiledList))
 
-		for _, outMp4Path := range compiledList {
-			err := IndexChunk(outMp4Path, lastPartFromPath(camDir), "gcb-site-pub")
-			if err != nil {
-				fmt.Errorf("IndexChunk(...) --- %s\n", err)
+		fmt.Printf("=== INDEX ===\n")
+		if os.Getenv("DRY_RUN") == "TRUE" {
+			fmt.Printf("DRY_RUN==TRUE .. not indexing")
+		} else {
+			for _, outMp4Path := range compiledList {
+				err := IndexChunk(outMp4Path, lastPartFromPath(camDir), "gcb-site-pub")
+				if err != nil {
+					fmt.Errorf("IndexChunk(...) --- %s\n", err)
+				}
 			}
 		}
+
+		// manual compile. archival only
 		//compileDayFromDirAndDate(fmt.Sprintf("%s/%s", "./sandboxfiles/data/img/dslr", cam), cam)
 	}
 
