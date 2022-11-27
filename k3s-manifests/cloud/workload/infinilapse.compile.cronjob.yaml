@@ -58,7 +58,7 @@ spec:
               value: "true"
 
 #          image: nargetdev/infinilapse:1.0.0
-          image: nargetdev/infinilapse:d-1.0.0
+          image: nargetdev/infinilapse:amd64-1.0.0
           imagePullPolicy: Always
           securityContext:
             privileged: true
