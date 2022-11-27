@@ -30,12 +30,13 @@ spec:
           whenUnsatisfiable: DoNotSchedule
       containers:
         - name: dslr-gbucket-dgraph
-#          resources:
-#            limits:
-#              memory: 1Gi
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1500Mi
 #            requests:
-#              cpu: 400m
-#              memory: 1Gi
+#              cpu: 1000m
+#              memory: 1500Mi
           env:
             - name: TZ
               value: America/Denver
