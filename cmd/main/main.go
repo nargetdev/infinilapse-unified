@@ -18,9 +18,13 @@ func main() {
 
 	s := gocron.NewScheduler(time.UTC)
 
-	_, ierr := s.Every(intTimelapseIntervalMins).Minutes().Do(CaptureAllCameras)
-	if ierr != nil {
-		println("oh no -- %s", ierr)
+	if os.Getenv("WEBCAM_CAPTURE") == "false" && os.Getenv("DSLR_CAPTURE") == "false" {
+		fmt.Println("Not capturing any cameras.")
+	} else {
+		_, ierr := s.Every(intTimelapseIntervalMins).Minutes().Do(CaptureAllCameras)
+		if ierr != nil {
+			println("oh no -- %s", ierr)
+		}
 	}
 
 	if os.Getenv("COMPILE") == "false" {
@@ -48,14 +52,15 @@ func CaptureAllCameras() {
 		println("NOT CAPTURING DSLR")
 	} else {
 		capturedFiles = append(capturedFiles, dslrMgmt.CaptureAllDslr()...)
+		fmt.Printf("dslrMgmt.CaptureAllDslr()...\n%v\n", capturedFiles)
 	}
 	if os.Getenv("WEBCAM_CAPTURE") == "false" {
 		println("NOT CAPTURING WEBCAM")
 	} else {
 		capturedFiles = append(capturedFiles, webcamMgmt.CaptureWebCams()...)
+		fmt.Printf("webcamMgmt.CaptureWebCams()...\n%v\n", capturedFiles)
 	}
 
-	fmt.Printf("webcamMgmt.CaptureFromDevicesList(devicesList)\n%v\n", capturedFiles)
 	err := cloud.IndexGoogleCloudStorageAndGraphQL(capturedFiles)
 	if err != nil {
 		fmt.Errorf("cloud.IndexGoogleCloudStorageAndGraphQL(filePaths) %s\n", err)
