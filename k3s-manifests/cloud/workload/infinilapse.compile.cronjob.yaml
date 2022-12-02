@@ -13,9 +13,9 @@ spec:
       labels:
         name: infinicomp
     spec:
-#      nodeSelector:
-#        cloud.google.com/compute-class: Scale-Out
-#        kubernetes.io/arch: arm64
+      nodeSelector:
+        cloud.google.com/compute-class: Scale-Out
+        kubernetes.io/arch: arm64
 #      nodeSelector:
 #        kubernetes.io/arch: amd64
 #        affinities: pensieve # memory capable
@@ -56,17 +56,17 @@ spec:
             - name: WEBCAM_CAPTURE
               value: "false"
             - name: COMPILE_NOW
-              value: "false"
+              value: "true"
             # by conventions my macros must match literally "TRUE".  anything else ("True", "true", "1") is not a match.
             - name: DRY_RUN
               value: "TRUE"
             # REQUIRED - So I can test some of this stuff locally.
             - name: I_AM_EMBEDDED
               value: "true"
-          image: nargetdev/infinilapse:1.0.3
+          image: nargetdev/infinilapse:arm64-1.0.5
           imagePullPolicy: Always
-          securityContext:
-            privileged: true
+#          securityContext:
+#            privileged: true
           volumeMounts:
             - mountPath: /data
               name: photos-volume
