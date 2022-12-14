@@ -3,3 +3,4 @@ sandboxfiles
 .DS_Store
 data
 vendor
+.config
