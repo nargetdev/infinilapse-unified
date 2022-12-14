@@ -32,11 +32,11 @@ spec:
         - name: dslr-gbucket-dgraph
           resources:
             limits:
-              cpu: 1000m
-              memory: 1500Mi
+              cpu: 800m
+              memory: 1Gi
 #            requests:
-#              cpu: 1000m
-#              memory: 1500Mi
+#              cpu: 400m
+#              memory: 500Mi
           env:
             - name: TZ
               value: America/Denver
@@ -61,7 +61,7 @@ spec:
             - name: TIMELAPSE_INTERVAL_MINS
               value: "15"
             - name: COMPILE
-              value: "true"
+              value: "false"
             - name: DSLR_CAPTURE
               value: "true"
             - name: WEBCAM_CAPTURE
@@ -85,7 +85,7 @@ spec:
           #            value: "192.168.1.51"
           #          - name: MQTT_BROKER_PORT
           #            value: "1884"
-          image: nargetdev/infinilapse:0.9.4
+          image: nargetdev/infinilapse:arm64-1.1.0
           imagePullPolicy: Always
           securityContext:
             privileged: true

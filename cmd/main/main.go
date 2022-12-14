@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	FAN_SETTLE_SLEEP_SECONDS = 10
+	FAN_SETTLE_SLEEP_SECONDS = 4
 )
 
 func main() {
@@ -73,14 +73,14 @@ func CaptureAllCameras() {
 		capturedFiles = append(capturedFiles, webcamMgmt.CaptureWebCams()...)
 		fmt.Printf("webcamMgmt.CaptureWebCams()...\n%v\n", capturedFiles)
 	}
+	fmt.Printf("Finished cap loop.  Unsetting the stage\n")
+	UnsetTheStage()
 
 	err := cloud.IndexGoogleCloudStorageAndGraphQL(capturedFiles)
 	if err != nil {
 		_ = fmt.Errorf("cloud.IndexGoogleCloudStorageAndGraphQL(filePaths) %s\n", err)
 	}
 
-	fmt.Printf("Finished cap loop.  Unsetting the stage\n")
-	UnsetTheStage()
 }
 
 func SetTheStage() {
