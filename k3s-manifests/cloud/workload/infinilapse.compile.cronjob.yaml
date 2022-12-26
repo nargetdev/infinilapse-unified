@@ -58,8 +58,8 @@ spec:
             - name: COMPILE_NOW
               value: "true"
             # by conventions my macros must match literally "TRUE".  anything else ("True", "true", "1") is not a match.
-            - name: DRY_RUN
-              value: "TRUE"
+#            - name: DRY_RUN
+#              value: "TRUE"
             # REQUIRED - So I can test some of this stuff locally.
             - name: I_AM_EMBEDDED
               value: "true"
@@ -70,8 +70,14 @@ spec:
           volumeMounts:
             - mountPath: /data
               name: photos-volume
+#      volumes:
+#        - name: photos-volume
+#          persistentVolumeClaim:
+#            claimName: nonvolatile-photos-volume
       volumes:
         - name: photos-volume
-          persistentVolumeClaim:
-            claimName: nonvolatile-photos-volume
+          nfs:
+            # URL for the NFS server
+            server: 192.168.1.35
+            path: /volume2/SSD_500GB/infiniShare
       terminationGracePeriodSeconds: 30

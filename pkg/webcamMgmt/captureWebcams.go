@@ -3,6 +3,7 @@ package webcamMgmt
 import (
 	"fmt"
 	"github.com/bitfield/script"
+	"infinilapse-unified/pkg/envHelp"
 	"infinilapse-unified/pkg/gcpMgmt"
 	"infinilapse-unified/pkg/gqlMgmt"
 	"infinilapse-unified/pkg/util"
@@ -35,7 +36,7 @@ func CaptureFromDevicesList(devices []string) (imgFilePathsList []string) {
 	}
 	DataDir := os.Getenv("OUTPUT_DIR_WEBCAMS")
 	if DataDir == "" {
-		DataDir = "/data/img/webcams"
+		DataDir = "/data/" + envHelp.NodeNameFromEnv() + "/img/webcams"
 	}
 
 	var exposureValues exposureMap = getExposureMapFromEnv()

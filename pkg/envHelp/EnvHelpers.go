@@ -20,3 +20,11 @@ func BaseDirFromEnv() string {
 	//}
 	//return baseDir
 }
+
+func NodeNameFromEnv() string {
+	nodeName := os.Getenv("MY_NODE_NAME")
+	if nodeName == "" {
+		nodeName = "unspecifiedNodeName"
+	}
+	return nodeName
+}

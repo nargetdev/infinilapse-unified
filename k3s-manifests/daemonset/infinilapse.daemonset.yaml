@@ -30,10 +30,10 @@ spec:
           whenUnsatisfiable: DoNotSchedule
       containers:
         - name: dslr-gbucket-dgraph
-          resources:
-            limits:
-              cpu: 800m
-              memory: 1Gi
+#          resources:
+#            limits:
+#              cpu: 800m
+#              memory: 1Gi
 #            requests:
 #              cpu: 400m
 #              memory: 500Mi
@@ -85,18 +85,24 @@ spec:
           #            value: "192.168.1.51"
           #          - name: MQTT_BROKER_PORT
           #            value: "1884"
-          image: nargetdev/infinilapse:arm64-1.1.0
+          image: nargetdev/infinilapse:arm64-1.1.2
           imagePullPolicy: Always
           securityContext:
             privileged: true
           volumeMounts:
             - mountPath: /data
               name: photos-volume
+#      volumes:
+#        - name: photos-volume
+#          hostPath:
+#            # directory location on host
+#            path: /data
+#            # this field is optional
+#            type: Directory
       volumes:
         - name: photos-volume
-          hostPath:
-            # directory location on host
-            path: /data
-            # this field is optional
-            type: Directory
+          nfs:
+            # URL for the NFS server
+            server: 192.168.1.35
+            path: /volume2/SSD_500GB/infiniShare
       terminationGracePeriodSeconds: 30

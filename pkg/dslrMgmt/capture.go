@@ -3,6 +3,7 @@ package dslrMgmt
 import (
 	"fmt"
 	"github.com/bitfield/script"
+	"infinilapse-unified/pkg/envHelp"
 	"infinilapse-unified/pkg/parser"
 	"strings"
 )
@@ -23,7 +24,7 @@ func CaptureAllDslr() (files []string) {
 		cameraName := strings.Split(cam[0], " ")[2]
 
 		ImgDir := ""
-		ImgDir = ImgDir + "/data/img/dslr/" + cameraName
+		ImgDir = "/data/" + envHelp.NodeNameFromEnv() + "/img/dslr/" + cameraName
 
 		datetimeStringWithNewline, err := script.Exec("date +%Y-%m-%dT%H:%M:%S%z").String()
 		datetimeString := strings.TrimSuffix(datetimeStringWithNewline, "\n")
