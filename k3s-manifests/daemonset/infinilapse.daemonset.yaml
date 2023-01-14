@@ -29,7 +29,7 @@ spec:
           topologyKey: kubernetes.io/hostname
           whenUnsatisfiable: DoNotSchedule
       containers:
-        - name: dslr-gbucket-dgraph
+        - name: infinilapse-capture
 #          resources:
 #            limits:
 #              cpu: 800m
