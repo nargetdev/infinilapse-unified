@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: webrtcstream
+  labels:
+    k8s-app: webrtcstream
+spec:
+  selector:
+    matchLabels:
+      name: webrtcstream
+  template:
+    metadata:
+      labels:
+        name: webrtcstream
+    spec:
+      nodeSelector:
+        device: camera
+      containers:
+        - name: mistreamerrr
+          image: mpromonet/webrtc-streamer
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+#              name: http
+          securityContext:
+            privileged: true

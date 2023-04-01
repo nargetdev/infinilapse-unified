@@ -49,6 +49,10 @@ func TestOscListen(t *testing.T) {
 			name: "listen to blender",
 			args: args{connectionString: "0.0.0.0:9002"},
 		},
+		{
+			name: "listen to drivenByMoss",
+			args: args{connectionString: "0.0.0.0:9000"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
