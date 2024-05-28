@@ -6,8 +6,6 @@ import (
 	"infinilapse-unified/pkg/cloud"
 	"infinilapse-unified/pkg/compiler"
 	"infinilapse-unified/pkg/dslrMgmt"
-	"infinilapse-unified/pkg/oscmanager"
-	"infinilapse-unified/pkg/stopgap"
 	"infinilapse-unified/pkg/webcamMgmt"
 	"os"
 	"strconv"

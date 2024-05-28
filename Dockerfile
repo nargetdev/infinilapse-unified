@@ -21,7 +21,7 @@ RUN go build -gcflags "all=-N -l" -o $binary_path ./cmd/main/
 
 # Final stage
 
-FROM archlinux
+FROM alpine
 # FROM balenalib/raspberrypi4-64-alpine:latest
 #FROM balenalib/raspberrypi4-64:latest
 
