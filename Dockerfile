@@ -20,7 +20,9 @@ RUN go build -gcflags "all=-N -l" -o $binary_path ./cmd/main/
 #CMD ["/webcam_cap"]
 
 # Final stage
-FROM balenalib/raspberrypi4-64-alpine:latest
+
+FROM archlinux
+# FROM balenalib/raspberrypi4-64-alpine:latest
 #FROM balenalib/raspberrypi4-64:latest
 
 #COPY --from=build-env /reformat_epoch_to_hooman /

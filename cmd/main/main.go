@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/go-co-op/gocron"
-	"gitlab.com/jamiemint4096/actionGroupREST"
 	"infinilapse-unified/pkg/cloud"
 	"infinilapse-unified/pkg/compiler"
 	"infinilapse-unified/pkg/dslrMgmt"
@@ -55,7 +54,7 @@ func main() {
 
 func CaptureAllCameras() {
 	fmt.Printf("Begin cap loop.  Setting the stage\n")
-	SetTheStage()
+	// SetTheStage()
 
 	// allow plant leaves to stop moving
 	time.Sleep(time.Second * FAN_SETTLE_SLEEP_SECONDS)
@@ -74,7 +73,7 @@ func CaptureAllCameras() {
 		fmt.Printf("webcamMgmt.CaptureWebCams()...\n%v\n", capturedFiles)
 	}
 	fmt.Printf("Finished cap loop.  Unsetting the stage\n")
-	UnsetTheStage()
+	// UnsetTheStage()
 
 	err := cloud.IndexGoogleCloudStorageAndGraphQL(capturedFiles)
 	if err != nil {
@@ -83,16 +82,16 @@ func CaptureAllCameras() {
 
 }
 
-func SetTheStage() {
-	actionGroupREST.PostOnOff(actionGroupREST.UUID_fan_relay_0, false, actionGroupREST.PlantiAuthPair)
-	oscmanager.FadeMaster(1.0)
-}
+// func SetTheStage() {
+// 	actionGroupREST.PostOnOff(actionGroupREST.UUID_fan_relay_0, false, actionGroupREST.PlantiAuthPair)
+// 	oscmanager.FadeMaster(1.0)
+// }
 
-func UnsetTheStage() {
-	actionGroupREST.PostOnOff(actionGroupREST.UUID_fan_relay_0, true, actionGroupREST.PlantiAuthPair)
-	brightnessVal := stopgap.STOPGAP_getFadeByTime()
-	oscmanager.FadeMaster(brightnessVal)
-}
+// func UnsetTheStage() {
+// 	actionGroupREST.PostOnOff(actionGroupREST.UUID_fan_relay_0, true, actionGroupREST.PlantiAuthPair)
+// 	brightnessVal := stopgap.STOPGAP_getFadeByTime()
+// 	oscmanager.FadeMaster(brightnessVal)
+// }
 
 func getEnvTimelapseInterval() interface{} {
 	TimelapseIntervalMins := os.Getenv("TIMELAPSE_INTERVAL_MINS")
