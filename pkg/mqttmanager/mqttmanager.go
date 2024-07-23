@@ -2,11 +2,12 @@ package mqttmanager
 
 import (
 	"fmt"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"infinilapse-unified/pkg/cloud"
 	"infinilapse-unified/pkg/dslrMgmt"
 	"infinilapse-unified/pkg/webcamMgmt"
 	"os"
+
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
@@ -18,7 +19,14 @@ var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 }
 
 var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
-	fmt.Printf("Connect lost: %v", err)
+	fmt.Printf("Connect lost: %v\n", err)
+	fmt.Println("Attempting to reconnect...")
+	token := client.Connect()
+	if token.Wait() && token.Error() != nil {
+		fmt.Printf("Reconnection failed: %v\n", token.Error())
+	} else {
+		fmt.Println("Reconnected successfully")
+	}
 }
 
 func StartMQTTClient(broker string, port int, topic string, captureFunc func()) mqtt.Client {
@@ -26,7 +34,7 @@ func StartMQTTClient(broker string, port int, topic string, captureFunc func()) 
 	brokerConnectString := fmt.Sprintf("tcp://%s:%d", broker, port)
 	println(brokerConnectString)
 	opts.AddBroker(brokerConnectString)
-	opts.SetClientID("infinilapse_client")
+	// opts.SetClientID("infinilapse_client") // this would need to be unique.
 	opts.SetDefaultPublishHandler(messagePubHandler)
 	opts.OnConnect = connectHandler
 	opts.OnConnectionLost = connectLostHandler

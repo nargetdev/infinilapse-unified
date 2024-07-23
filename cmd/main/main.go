@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-co-op/gocron"
 	"infinilapse-unified/pkg/cloud"
 	"infinilapse-unified/pkg/compiler"
 	"infinilapse-unified/pkg/dslrMgmt"
@@ -11,6 +10,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/go-co-op/gocron"
 )
 
 const (
@@ -21,29 +22,35 @@ func main() {
 	// Env stuffs
 	intTimelapseIntervalMins := getEnvTimelapseInterval()
 
-	s := gocron.NewScheduler(time.UTC)
-
-	if os.Getenv("WEBCAM_CAPTURE") == "false" && os.Getenv("DSLR_CAPTURE") == "false" {
-		fmt.Println("Not capturing any cameras.")
+	if os.Getenv("NO_CRON") == "true" {
+		fmt.Println("NO_CRON is set, skipping cron setup")
 	} else {
-		_, ierr := s.Every(intTimelapseIntervalMins).Minutes().Do(CaptureAllCameras)
-		if ierr != nil {
-			println("oh no -- %s", ierr)
-		}
-	}
+		s := gocron.NewScheduler(time.UTC)
 
-	if os.Getenv("COMPILE") == "false" {
-		println("NOT COMPILING")
-	} else {
-		var yesterdayCompileErr error
-		if os.Getenv("COMPILE_NOW") == "true" {
-			_, yesterdayCompileErr = s.Every(1).Day().Do(compiler.ChunkCompiler)
+		if os.Getenv("WEBCAM_CAPTURE") == "false" && os.Getenv("DSLR_CAPTURE") == "false" {
+			fmt.Println("Not capturing any cameras.")
 		} else {
-			_, yesterdayCompileErr = s.Every(1).Day().At("00:01").Do(compiler.ChunkCompiler)
+			_, ierr := s.Every(intTimelapseIntervalMins).Minutes().Do(CaptureAllCameras)
+			if ierr != nil {
+				println("oh no -- %s", ierr)
+			}
 		}
-		if yesterdayCompileErr != nil {
-			println("chunky err --- %s", yesterdayCompileErr)
+
+		if os.Getenv("COMPILE") == "false" {
+			println("NOT COMPILING")
+		} else {
+			var yesterdayCompileErr error
+			if os.Getenv("COMPILE_NOW") == "true" {
+				_, yesterdayCompileErr = s.Every(1).Day().Do(compiler.ChunkCompiler)
+			} else {
+				_, yesterdayCompileErr = s.Every(1).Day().At("00:01").Do(compiler.ChunkCompiler)
+			}
+			if yesterdayCompileErr != nil {
+				println("chunky err --- %s", yesterdayCompileErr)
+			}
 		}
+
+		s.StartBlocking()
 	}
 
 	// Start MQTT client
@@ -56,8 +63,8 @@ func main() {
 		defer mqttClient.Disconnect(250)
 	}
 
-	//s.StartAsync()
-	s.StartBlocking()
+	// Block the main goroutine to keep the MQTT client running
+	select {}
 }
 
 func CaptureAllCameras() {
