@@ -6,6 +6,7 @@ import (
 	"infinilapse-unified/pkg/cloud"
 	"infinilapse-unified/pkg/compiler"
 	"infinilapse-unified/pkg/dslrMgmt"
+	"infinilapse-unified/pkg/mqttmanager"
 	"infinilapse-unified/pkg/webcamMgmt"
 	"os"
 	"strconv"
@@ -45,9 +46,18 @@ func main() {
 		}
 	}
 
+	// Start MQTT client
+	mqttBroker := os.Getenv("MQTT_BROKER")
+	mqttPort, _ := strconv.Atoi(os.Getenv("MQTT_PORT"))
+	mqttTopic := "sync/#"
+
+	if mqttBroker != "" && mqttPort != 0 {
+		mqttClient := mqttmanager.StartMQTTClient(mqttBroker, mqttPort, mqttTopic, mqttmanager.CaptureAllCameras)
+		defer mqttClient.Disconnect(250)
+	}
+
 	//s.StartAsync()
 	s.StartBlocking()
-
 }
 
 func CaptureAllCameras() {
@@ -77,7 +87,6 @@ func CaptureAllCameras() {
 	if err != nil {
 		_ = fmt.Errorf("cloud.IndexGoogleCloudStorageAndGraphQL(filePaths) %s\n", err)
 	}
-
 }
 
 // func SetTheStage() {
