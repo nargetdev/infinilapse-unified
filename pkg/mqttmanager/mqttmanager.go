@@ -23,7 +23,9 @@ var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err
 
 func StartMQTTClient(broker string, port int, topic string, captureFunc func()) mqtt.Client {
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", broker, port))
+	brokerConnectString := fmt.Sprintf("tcp://%s:%d", broker, port)
+	println(brokerConnectString)
+	opts.AddBroker(brokerConnectString)
 	opts.SetClientID("infinilapse_client")
 	opts.SetDefaultPublishHandler(messagePubHandler)
 	opts.OnConnect = connectHandler

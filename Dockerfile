@@ -22,6 +22,9 @@ RUN go build -gcflags "all=-N -l" -o $binary_path ./cmd/main/
 # Final stage
 
 FROM alpine
+
+COPY .config/gcloud/application_default_credentials.json /root/.config/gcloud/application_default_credentials.json
+
 # FROM balenalib/raspberrypi4-64-alpine:latest
 #FROM balenalib/raspberrypi4-64:latest
 
@@ -31,8 +34,6 @@ FROM alpine
 # for timezone info make sure to set TZ
 RUN apk add --no-cache tzdata
 RUN #apt install tzdata
-
-COPY .config/gcloud/application_default_credentials.json /root/.config/gcloud/application_default_credentials.json
 
 # auth for GCP
 ENV GOOGLE_APPLICATION_CREDENTIALS /root/.config/gcloud/application_default_credentials.json
