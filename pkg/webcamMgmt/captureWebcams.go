@@ -55,18 +55,13 @@ func CaptureFromDevicesList(devices []string) (imgFilePathsList []string) {
 
 		fmt.Printf("Capture on device: %s --- at exposure %d\n", device, exposureAbsolute)
 
-		gain := 0
 		cmdStr := fmt.Sprintf(`
 v4l2-ctl -d %s \
--c exposure_absolute=%d \
--c white_balance_temperature_auto=0 \
--c exposure_auto=1 \
--c gain=%d \
 --set-fmt-video=width=1920,height=1080 \
 --stream-mmap \
 --stream-count=1 \
 --stream-to=%s
-`, device, exposureAbsolute, gain, fullPathResult)
+`, device, fullPathResult)
 
 		for i := 0; i < 2; i++ {
 			outStr, err := script.Exec(cmdStr).String()

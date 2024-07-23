@@ -31,7 +31,7 @@ func cameraNameFromFullPath(file string) string {
 }
 
 func bucketFromEnv() string {
-	GcbBucket := "gcb-site-pub"
+	GcbBucket := "infinilapse-sousveillant-0"
 	return GcbBucket
 }
 

@@ -20,7 +20,7 @@ func TestUploadFile(t *testing.T) {
 			name: "good path",
 			args: args{
 				filePath: "./getToDaBucket/clobber.jpg",
-				bucket:   "tl-data",
+				bucket:   "infinilapse-sousveillant-0",
 				object:   "unittest/clobber.jpg",
 			},
 			wantErr: false,
