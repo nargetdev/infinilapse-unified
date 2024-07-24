@@ -1,5 +1,5 @@
 # Compile stage
-FROM golang AS build-env
+FROM balenalib/%%BALENA_MACHINE_NAME%%-golang AS build-env
 ENV CGO_ENABLED 0
 
 ARG src_dir=/tl_compiler_src
@@ -21,7 +21,7 @@ RUN go build -gcflags "all=-N -l" -o $binary_path ./cmd/main/
 
 # Final stage
 
-FROM alpine
+FROM balenalib/%%BALENA_MACHINE_NAME%%-alpine:latest
 
 COPY .config/gcloud/application_default_credentials.json /root/.config/gcloud/application_default_credentials.json
 
@@ -32,12 +32,15 @@ COPY .config/gcloud/application_default_credentials.json /root/.config/gcloud/ap
 #COPY --from=build-env /compilePriorChunks /
 
 # for timezone info make sure to set TZ
-RUN apk add --no-cache tzdata
+# RUN apk add --no-cache tzdata
 
 # auth for GCP
 ENV GOOGLE_APPLICATION_CREDENTIALS /root/.config/gcloud/application_default_credentials.json
 RUN apk add ca-certificates
+RUN #apt install ca-certificates
 
+RUN #apt update
+#RUN apt install ffmpeg gphoto2 libgphoto2-6 fswebcam v4l-utils
 
 RUN apk add ffmpeg gphoto2 libgphoto2 v4l-utils
 
